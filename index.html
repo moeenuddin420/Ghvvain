@@ -1,0 +1,2581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LudoArena — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --red: #FF1F3D;
+  --red-dark: #CC0020;
+  --red-glow: rgba(255,31,61,0.25);
+  --blue: #1F6BFF;
+  --blue-light: #6BA3FF;
+  --yellow: #FFD600;
+  --yellow-dark: #B89A00;
+  --green: #00E676;
+  --green-bg: rgba(0,230,118,0.1);
+  --orange: #FF6D00;
+  --bg: #080810;
+  --bg2: #0F0F1A;
+  --bg3: #161625;
+  --bg4: #1E1E30;
+  --bg5: #252538;
+  --text: #F0F0FF;
+  --text2: #9090B0;
+  --text3: #505070;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --radius: 14px;
+  --radius-sm: 9px;
+  --sidebar-w: 240px;
+  --header-h: 64px;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'Nunito', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); overflow: hidden; }
+
+/* ── LAYOUT ── */
+#app { display: flex; height: 100vh; }
+.sidebar {
+  width: var(--sidebar-w); background: var(--bg2);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+  flex-shrink: 0; z-index: 10;
+}
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.header {
+  height: var(--header-h); background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; flex-shrink: 0;
+}
+.content { flex: 1; overflow-y: auto; padding: 28px; }
+
+/* ── SIDEBAR ── */
+.sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+.logo-text {
+  font-family: var(--font-display); font-size: 28px; letter-spacing: 3px;
+  background: linear-gradient(135deg, var(--red), var(--yellow));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1;
+}
+.logo-sub { font-size: 10px; font-weight: 700; color: var(--text2); letter-spacing: 2px; margin-top: 3px; }
+.nav-section { padding: 16px 12px 8px; }
+.nav-section-label { font-size: 10px; font-weight: 700; color: var(--text2); letter-spacing: 2px; padding: 0 8px; margin-bottom: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s; margin-bottom: 2px;
+  color: var(--text2); font-weight: 700; font-size: 14px; border: none; background: none; width: 100%; text-align: left;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--red); color: #fff; box-shadow: 0 4px 16px var(--red-glow); }
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--yellow); color: #000;
+  font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px;
+}
+.sidebar-footer { margin-top: auto; padding: 16px 12px; border-top: 1px solid var(--border); }
+.admin-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: var(--bg3); border-radius: var(--radius-sm);
+}
+.admin-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+.admin-label { font-size: 13px; font-weight: 700; color: var(--text); }
+.admin-role { font-size: 10px; color: var(--text2); font-weight: 600; }
+
+/* ── HEADER ── */
+.header-title { font-family: var(--font-display); font-size: 24px; letter-spacing: 2px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header-status {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 14px; background: var(--bg3); border-radius: 20px;
+  font-size: 12px; font-weight: 700; color: var(--text2);
+}
+.header-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ── STAT CARDS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden;
+}
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.stat-card.red::before { background: linear-gradient(90deg, var(--red), transparent); }
+.stat-card.blue::before { background: linear-gradient(90deg, var(--blue), transparent); }
+.stat-card.yellow::before { background: linear-gradient(90deg, var(--yellow), transparent); }
+.stat-card.green::before { background: linear-gradient(90deg, var(--green), transparent); }
+.stat-label { font-size: 11px; font-weight: 700; color: var(--text2); letter-spacing: 1px; margin-bottom: 8px; }
+.stat-value { font-family: var(--font-display); font-size: 36px; letter-spacing: 1px; }
+.stat-value.red { color: var(--red); }
+.stat-value.blue { color: var(--blue-light); }
+.stat-value.yellow { color: var(--yellow); }
+.stat-value.green { color: var(--green); }
+.stat-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 36px; opacity: 0.15; }
+
+/* ── SECTION HEADER ── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: var(--radius-sm); border: none;
+  font-family: var(--font-body); font-weight: 800; font-size: 13px;
+  cursor: pointer; transition: all 0.18s; white-space: nowrap;
+}
+.btn-red { background: linear-gradient(135deg, var(--red), #FF4560); color: #fff; box-shadow: 0 3px 14px var(--red-glow); }
+.btn-red:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--red-glow); }
+.btn-blue { background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: #fff; box-shadow: 0 3px 14px rgba(31,107,255,0.3); }
+.btn-blue:hover { transform: translateY(-1px); }
+.btn-yellow { background: linear-gradient(135deg, var(--yellow-dark), var(--yellow)); color: #000; }
+.btn-yellow:hover { transform: translateY(-1px); }
+.btn-ghost { background: var(--bg3); border: 1.5px solid var(--border2); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+.btn-green { background: linear-gradient(135deg, #00b248, var(--green)); color: #000; }
+.btn-danger { background: transparent; border: 1.5px solid var(--red); color: var(--red); }
+.btn-danger:hover { background: rgba(255,31,61,0.1); }
+.btn-purple { background: linear-gradient(135deg, #7C3AED, #A855F7); color: #fff; }
+.btn-purple:hover { transform: translateY(-1px); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.4; pointer-events: none; }
+
+/* ── MATCH CARDS GRID ── */
+.matches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
+.match-admin-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; transition: border-color 0.2s;
+}
+.match-admin-card:hover { border-color: var(--border2); }
+.mac-header {
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.mac-id { font-family: var(--font-mono); font-size: 12px; color: var(--text2); }
+.status-badge {
+  font-size: 10px; font-weight: 800; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.badge-open { background: rgba(31,107,255,0.18); color: var(--blue-light); }
+.badge-started { background: rgba(255,214,0,0.18); color: var(--yellow); }
+.badge-finished { background: rgba(255,255,255,0.08); color: var(--text2); }
+.badge-cancelled { background: rgba(255,31,61,0.12); color: #FF6B7A; }
+
+.mac-body { padding: 14px 16px; }
+.mac-row { display: flex; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+.mac-item { flex: 1; }
+.mac-lbl { font-size: 10px; font-weight: 700; color: var(--text2); letter-spacing: 0.5px; margin-bottom: 3px; }
+.mac-val { font-size: 15px; font-weight: 800; }
+.mac-val.yellow { color: var(--yellow); }
+.mac-val.red { color: #FF6B7A; }
+.mac-val.green { color: var(--green); }
+.mac-val.blue { color: var(--blue-light); }
+
+.mac-players { margin-top: 10px; }
+.player-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; background: var(--bg3); border-radius: var(--radius-sm); margin-bottom: 6px;
+}
+.player-avatar {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--bg4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.player-info { flex: 1; min-width: 0; }
+.player-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-uid { font-family: var(--font-mono); font-size: 10px; color: var(--text2); }
+.proof-indicator { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 8px; }
+.proof-yes { background: var(--green-bg); color: var(--green); cursor: pointer; }
+.proof-no { background: var(--bg4); color: var(--text2); }
+
+.mac-footer {
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+
+/* ── JOIN CODE SECTION ── */
+.joincode-section { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.current-code-display {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: rgba(255,214,0,0.06);
+  border: 1px solid rgba(255,214,0,0.2); border-radius: var(--radius-sm);
+}
+.current-code-label { font-size: 10px; font-weight: 700; color: var(--text2); letter-spacing: 0.5px; flex-shrink: 0; }
+.current-code-val { font-family: var(--font-display); font-size: 20px; letter-spacing: 3px; color: var(--yellow); flex: 1; }
+.cred-input-row { display: flex; gap: 8px; align-items: center; width: 100%; }
+.cred-input {
+  flex: 1; padding: 8px 12px; background: var(--bg3);
+  border: 1.5px solid var(--border2); border-radius: var(--radius-sm);
+  color: var(--text); font-family: var(--font-mono); font-size: 14px; outline: none;
+  transition: border-color 0.2s;
+}
+.cred-input:focus { border-color: var(--yellow); }
+.cred-input::placeholder { color: var(--text2); }
+.start-hint { font-size: 11px; color: var(--text3); font-weight: 700; padding: 6px 0; }
+
+/* proof thumbnails */
+.proof-thumbs-row { display: flex; gap: 8px; width: 100%; }
+.proof-thumb-wrap {
+  flex: 1; background: var(--bg3); border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); overflow: hidden; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.proof-thumb-wrap:hover { border-color: var(--yellow); }
+.proof-thumb-wrap img { width: 100%; height: 90px; object-fit: cover; display: block; }
+.proof-thumb-label { padding: 5px 8px; font-size: 10px; font-weight: 700; color: var(--text2); text-align: center; }
+
+/* ── USERS TABLE ── */
+.table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.table-search { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.search-input {
+  width: 100%; padding: 10px 14px; background: var(--bg3);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--blue); }
+.search-input::placeholder { color: var(--text2); }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700;
+  color: var(--text2); letter-spacing: 1px; border-bottom: 1px solid var(--border); background: var(--bg3);
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+tbody td { padding: 12px 16px; font-size: 14px; }
+.td-email { font-size: 13px; color: var(--text2); }
+.td-pid { font-family: var(--font-mono); font-size: 12px; color: var(--blue-light); }
+.td-balance { font-weight: 800; color: var(--yellow); }
+.blocked-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; background: rgba(255,31,61,0.15); color: #FF6B7A; border-radius: 8px; }
+.active-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; background: var(--green-bg); color: var(--green); border-radius: 8px; }
+.td-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* users empty state */
+.users-empty-state {
+  text-align: center; padding: 60px 20px;
+  border: 1.5px dashed var(--border2); border-radius: var(--radius);
+  background: var(--bg2); margin-top: 4px;
+}
+.users-empty-icon { font-size: 48px; margin-bottom: 12px; }
+.users-empty-title { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; color: var(--text2); margin-bottom: 6px; }
+.users-empty-sub { font-size: 13px; color: var(--text3); font-weight: 600; }
+
+/* load more */
+.load-more-row { padding: 16px; text-align: center; border-top: 1px solid var(--border); }
+
+/* search hint chip */
+.search-hint {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+  margin-top: 6px;
+}
+.search-hint-email  { background: rgba(31,107,255,0.12); color: var(--blue-light); }
+.search-hint-pid    { background: rgba(255,214,0,0.12);  color: var(--yellow); }
+
+/* ── CREATE MATCH FORM ── */
+.form-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; max-width: 600px;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label { font-size: 11px; font-weight: 700; color: var(--text2); letter-spacing: 0.5px; }
+.form-input {
+  padding: 11px 14px; background: var(--bg3); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-body);
+  font-size: 14px; font-weight: 600; outline: none; transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--red); }
+.form-input::placeholder { color: var(--text2); }
+select.form-input { cursor: pointer; }
+select.form-input option { background: var(--bg3); }
+.form-divider { height: 1px; background: var(--border); margin: 20px 0; }
+.form-hint { font-size: 12px; color: var(--text2); font-weight: 600; margin-top: 4px; }
+.toggle-row { display: flex; gap: 8px; }
+.toggle-btn {
+  flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  background: none; cursor: pointer; font-family: var(--font-body); font-weight: 700; font-size: 13px;
+  color: var(--text2); transition: all 0.2s; text-align: center;
+}
+.toggle-btn.active { background: var(--bg4); border-color: var(--yellow); color: var(--yellow); }
+
+/* ── WITHDRAWAL QUEUE TABLE ── */
+.wd-badge-paid { font-size: 10px; font-weight: 700; padding: 2px 8px; background: var(--green-bg); color: var(--green); border-radius: 8px; }
+.wd-badge-pending { font-size: 10px; font-weight: 700; padding: 2px 8px; background: rgba(255,214,0,0.15); color: var(--yellow); border-radius: 8px; }
+.wd-badge-rejected { font-size: 10px; font-weight: 700; padding: 2px 8px; background: rgba(255,31,61,0.12); color: #FF6B7A; border-radius: 8px; }
+
+/* ── METHODS LIST ── */
+.methods-list { display: flex; flex-direction: column; gap: 10px; max-width: 700px; }
+.method-row-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+}
+.method-row-info { flex: 1; }
+.method-row-name { font-size: 15px; font-weight: 800; }
+.method-row-details { font-size: 12px; color: var(--text2); font-weight: 600; margin-top: 3px; }
+.method-inactive { opacity: 0.5; }
+
+/* ── SETTINGS FORM ── */
+.settings-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; max-width: 560px;
+}
+.settings-icon-row { font-size: 28px; margin-bottom: 6px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s; padding: 20px;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 28px; width: 100%; max-width: 460px;
+  transform: scale(0.95); transition: transform 0.25s; box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+}
+.modal-overlay.open .modal-box { transform: scale(1); }
+.modal-title { font-family: var(--font-display); font-size: 26px; letter-spacing: 2px; margin-bottom: 6px; }
+.modal-sub { font-size: 13px; color: var(--text2); font-weight: 600; margin-bottom: 20px; }
+.modal-divider { height: 1px; background: var(--border); margin: 16px 0; }
+.modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+.modal-btns .btn { flex: 1; justify-content: center; padding: 12px; }
+.confirm-msg { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.5; }
+.confirm-warn { margin-top: 12px; padding: 12px 14px; background: rgba(255,31,61,0.08); border: 1px solid rgba(255,31,61,0.2); border-radius: var(--radius-sm); font-size: 13px; color: #FF6B7A; font-weight: 700; }
+
+/* balance modal tabs */
+.balance-type-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.balance-tab {
+  flex: 1; padding: 9px; text-align: center; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: none; cursor: pointer;
+  font-family: var(--font-body); font-weight: 700; font-size: 13px; color: var(--text2); transition: all 0.2s;
+}
+.balance-tab.add.active { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+.balance-tab.deduct.active { background: rgba(255,31,61,0.1); border-color: var(--red); color: var(--red); }
+
+/* lightbox */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.93);
+  z-index: 300; align-items: center; justify-content: center; display: none;
+}
+.lightbox.open { display: flex; }
+.lightbox-img-wrap {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  overflow: auto; cursor: grab;
+}
+.lightbox-img-wrap.dragging { cursor: grabbing; }
+.lightbox img {
+  max-width: 90vw; max-height: 90vh; border-radius: var(--radius);
+  transition: transform 0.15s ease; transform-origin: center center;
+  user-select: none; pointer-events: none;
+}
+.lightbox-zoom-controls {
+  position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; z-index: 310;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 30px;
+  padding: 8px 14px;
+}
+.lightbox-zoom-controls button {
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2);
+  background: var(--bg3); color: var(--text); font-size: 16px; font-weight: 800;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.lightbox-zoom-controls button:hover { background: var(--bg4); }
+.lightbox-zoom-controls #lightboxZoomLabel {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text2);
+  min-width: 44px; text-align: center;
+}
+.lightbox-close {
+  position: absolute; top: 20px; right: 20px; background: var(--bg2);
+  border: 1px solid var(--border2); color: var(--text); border-radius: 50%;
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; right: 28px; background: var(--bg3);
+  border: 1px solid var(--border2); border-radius: 12px; padding: 12px 20px;
+  font-size: 14px; font-weight: 700; z-index: 999;
+  transform: translateY(80px); opacity: 0; transition: all 0.3s;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: rgba(0,230,118,0.4); color: var(--green); }
+.toast.error { border-color: rgba(255,31,61,0.4); color: #FF6B7A; }
+.toast.info { border-color: rgba(255,214,0,0.3); color: var(--yellow); }
+
+/* empty */
+.empty { text-align: center; padding: 60px 20px; }
+.empty-icon { font-size: 56px; margin-bottom: 12px; }
+.empty-text { font-family: var(--font-display); font-size: 24px; letter-spacing: 2px; color: var(--text2); }
+.empty-sub { font-size: 13px; color: var(--text2); margin-top: 6px; opacity: 0.6; }
+
+/* tx history list */
+.tx-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; max-width: 700px; }
+.tx-row {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 12px 16px; display: flex; align-items: center; gap: 14px;
+}
+.tx-type-badge { font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 8px; white-space: nowrap; }
+.tx-credit { background: var(--green-bg); color: var(--green); }
+.tx-debit { background: rgba(255,31,61,0.12); color: #FF6B7A; }
+.tx-neutral { background: rgba(255,214,0,0.12); color: var(--yellow); }
+.tx-info { flex: 1; min-width: 0; }
+.tx-note { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-time { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.tx-amount { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bg5); }
+
+/* filter btns */
+.match-filter-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+.wd-filter-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* notify textarea */
+.form-textarea {
+  padding: 11px 14px; background: var(--bg3); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-body);
+  font-size: 14px; font-weight: 600; outline: none; transition: border-color 0.2s;
+  resize: vertical; min-height: 90px; width: 100%;
+}
+.form-textarea:focus { border-color: #A855F7; }
+.form-textarea::placeholder { color: var(--text2); }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-close" onclick="closeLightbox()">✕</div>
+  <div class="lightbox-zoom-controls">
+    <button onclick="zoomLightbox(-0.25)">−</button>
+    <span id="lightboxZoomLabel">100%</span>
+    <button onclick="zoomLightbox(0.25)">+</button>
+    <button onclick="resetLightboxZoom()">Reset</button>
+  </div>
+  <div class="lightbox-img-wrap" id="lightboxImgWrap">
+    <img id="lightboxImg" src="" alt="Proof"/>
+  </div>
+</div>
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">LudoArena</div>
+      <div class="logo-sub">⚙️ ADMIN PANEL</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">OVERVIEW</div>
+      <button class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Dashboard
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">TOURNAMENT</div>
+      <button class="nav-item" id="nav-create" onclick="navigate('create',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+        Create Match
+      </button>
+      <button class="nav-item" id="nav-matches" onclick="navigate('matches',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        Manage Matches
+        <span class="nav-badge" id="pendingBadge" style="display:none;">0</span>
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">USERS</div>
+      <button class="nav-item" id="nav-users" onclick="navigate('users',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        Users
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">FINANCE</div>
+      <button class="nav-item" id="nav-withdrawals" onclick="navigate('withdrawals',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 7.28V5c0-1.1-.9-2-2-2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-2.28A2 2 0 0 0 22 15V9a2 2 0 0 0-1-1.72zM20 9v6h-7V9h7zM5 19V5h14v2h-6c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h6v2H5z"/></svg>
+        Withdrawals
+        <span class="nav-badge" id="wdBadge" style="display:none;">0</span>
+      </button>
+      <button class="nav-item" id="nav-methods" onclick="navigate('methods',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        Withdraw Methods
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">SYSTEM</div>
+      <button class="nav-item" id="nav-settings" onclick="navigate('settings',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        Settings
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="admin-chip">
+        <div class="admin-dot"></div>
+        <div>
+          <div class="admin-label">Admin</div>
+          <div class="admin-role">ADMINISTRATOR</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="header">
+      <div class="header-title" id="headerTitle">DASHBOARD</div>
+      <div class="header-right">
+        <div class="header-status">
+          <div class="header-status-dot"></div>
+          Connected
+        </div>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="screen-dashboard" class="screen active">
+        <div class="stats-grid">
+          <div class="stat-card red">
+            <div class="stat-label">TOTAL MATCHES</div>
+            <div class="stat-value red" id="dashTotal">—</div>
+            <div class="stat-icon">🎲</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-label">ACTIVE / LIVE</div>
+            <div class="stat-value blue" id="dashActive">—</div>
+            <div class="stat-icon">🔴</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-label">TOTAL USERS</div>
+            <div class="stat-value yellow" id="dashUsers">—</div>
+            <div class="stat-icon">👥</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">PENDING PROOFS</div>
+            <div class="stat-value green" id="dashProofs">—</div>
+            <div class="stat-icon">📸</div>
+          </div>
+        </div>
+        <div class="section-header">
+          <div class="section-title">RECENT MATCHES</div>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('matches',document.getElementById('nav-matches'))">View All →</button>
+        </div>
+        <div id="dashRecentMatches"><div class="spinner"></div></div>
+      </div>
+
+      <!-- CREATE MATCH -->
+      <div id="screen-create" class="screen">
+        <div class="section-header"><div class="section-title">CREATE MATCH</div></div>
+        <div class="form-card">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">ENTRY FEE (৳)</label>
+              <input class="form-input" type="number" id="createFee" placeholder="e.g. 50" min="1"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">REWARD AMOUNT (৳)</label>
+              <input class="form-input" type="number" id="createReward" placeholder="e.g. 90" min="1"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">MATCH TYPE</label>
+              <select class="form-input" id="createType">
+                <option value="classic">Classic</option>
+                <option value="special">Special</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">START MODE</label>
+              <div class="toggle-row">
+                <button class="toggle-btn active" id="modeFixed" onclick="setStartMode('fixed_time')">📅 Fixed Time</button>
+                <button class="toggle-btn" id="modeOnFull" onclick="setStartMode('on_full')">👥 On Full</button>
+              </div>
+            </div>
+            <div class="form-group full" id="scheduledAtGroup">
+              <label class="form-label">SCHEDULED DATE & TIME</label>
+              <input class="form-input" type="datetime-local" id="createDate"/>
+            </div>
+          </div>
+          <div class="form-hint">1v1 format. Set a join code then start the match from Manage Matches.</div>
+          <div class="form-divider"></div>
+          <button class="btn btn-red" id="createMatchBtn" onclick="handleCreateMatch()" style="width:100%;justify-content:center;padding:13px;">
+            CREATE MATCH
+          </button>
+        </div>
+      </div>
+
+      <!-- MANAGE MATCHES -->
+      <div id="screen-matches" class="screen">
+        <div class="section-header">
+          <div class="section-title">MANAGE MATCHES</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm match-filter-btn active" onclick="filterAdminMatches('all',this)">All</button>
+            <button class="btn btn-ghost btn-sm match-filter-btn" onclick="filterAdminMatches('open',this)">Open</button>
+            <button class="btn btn-ghost btn-sm match-filter-btn" onclick="filterAdminMatches('started',this)">Live</button>
+            <button class="btn btn-ghost btn-sm match-filter-btn" onclick="filterAdminMatches('finished',this)">Finished</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadAdminMatches()">↻</button>
+          </div>
+        </div>
+        <div class="matches-grid" id="adminMatchesGrid"><div class="spinner"></div></div>
+      </div>
+
+      <!-- USERS -->
+      <div id="screen-users" class="screen">
+        <div class="section-header">
+          <div class="section-title">USER MANAGEMENT</div>
+          <div style="display:flex;gap:8px;">
+            <!-- ── NEW: broadcast button ── -->
+<button class="btn btn-purple btn-sm" onclick="openBroadcastModal()">📢 Broadcast</button>
+<button class="btn btn-red btn-sm" onclick="openBroadcastVoiceModal()">🎙️ Voice Alert</button>
+            <button class="btn btn-ghost btn-sm" id="loadAllUsersBtn" onclick="loadUsersPage(1, true)">Load All</button>
+          </div>
+        </div>
+
+        <!-- search bar -->
+        <div style="margin-bottom:12px;">
+          <input
+            class="search-input"
+            type="text"
+            id="userSearchInput"
+            placeholder="🔍 Search by email or Player ID — results load from server"
+            oninput="handleUserSearch(this.value)"
+          />
+          <div id="searchHintChip" style="display:none;margin-top:6px;"></div>
+        </div>
+
+        <!-- table (hidden until results load) -->
+        <div id="usersTableWrap" style="display:none;">
+          <div class="table-wrap">
+            <div style="overflow-x:auto;">
+              <table>
+                <thead>
+<tr><th>USER</th><th>PLAYER ID</th><th>BALANCE</th><th>REFER</th><th>STATUS</th><th>ACTIONS</th></tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+            <!-- load more row (shown only in paginated load-all mode) -->
+            <div id="loadMoreRow" class="load-more-row" style="display:none;">
+              <button class="btn btn-ghost btn-sm" id="loadMoreBtn" onclick="loadUsersPage(usersCurrentPage + 1, false)">Load More</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- empty / prompt state -->
+        <div id="usersEmptyState" class="users-empty-state">
+          <div class="users-empty-icon">🔍</div>
+          <div class="users-empty-title">SEARCH FOR A USER</div>
+          <div class="users-empty-sub">Type an email or Player ID above, or use "Load All" to browse page by page.</div>
+        </div>
+      </div>
+
+      <!-- WITHDRAWALS -->
+      <div id="screen-withdrawals" class="screen">
+        <div class="section-header">
+          <div class="section-title">WITHDRAWAL QUEUE</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm wd-filter-btn active" onclick="filterWithdrawals('pending',this)">Pending</button>
+            <button class="btn btn-ghost btn-sm wd-filter-btn" onclick="filterWithdrawals('paid',this)">Paid</button>
+            <button class="btn btn-ghost btn-sm wd-filter-btn" onclick="filterWithdrawals('rejected',this)">Rejected</button>
+            <button class="btn btn-ghost btn-sm wd-filter-btn" onclick="filterWithdrawals('all',this)">All</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadWithdrawals()">↻</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr><th>USER</th><th>METHOD</th><th>AMOUNT</th><th>ADDRESS</th><th>STATUS</th><th>REQUESTED</th><th>ACTIONS</th></tr>
+              </thead>
+              <tbody id="withdrawalsTableBody">
+                <tr><td colspan="7"><div class="spinner"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- WITHDRAW METHODS -->
+      <div id="screen-methods" class="screen">
+        <div class="section-header">
+          <div class="section-title">WITHDRAW METHODS</div>
+          <button class="btn btn-red btn-sm" onclick="openAddMethodModal()">+ Add Method</button>
+        </div>
+        <div class="methods-list" id="methodsList"><div class="spinner"></div></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="screen-settings" class="screen">
+        <div class="section-header"><div class="section-title">SETTINGS</div></div>
+        <div class="settings-card">
+          <div class="settings-icon-row">📡</div>
+          <div style="font-family:var(--font-display);font-size:20px;letter-spacing:2px;margin-bottom:4px;">CONTACT INFO</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:20px;font-weight:600;">Shown to users in the deposit / contact section</div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label class="form-label">FACEBOOK URL</label>
+            <input class="form-input" type="url" id="settingsFB" placeholder="https://facebook.com/…"/>
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label class="form-label">WHATSAPP URL</label>
+            <input class="form-input" type="url" id="settingsWA" placeholder="https://wa.me/880…"/>
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label class="form-label">TELEGRAM PERSONAL URL</label>
+            <input class="form-input" type="url" id="settingsTG" placeholder="https://t.me/username"/>
+          </div>
+          <div class="form-group" style="margin-bottom:20px;">
+            <label class="form-label">TELEGRAM CHANNEL / GROUP URL</label>
+            <input class="form-input" type="url" id="settingsTGC" placeholder="https://t.me/yourchannel"/>
+          </div>
+          <button class="btn btn-red" id="saveContactBtn" onclick="saveContactInfo()" style="width:100%;justify-content:center;padding:13px;">SAVE CONTACT INFO</button>
+        </div>
+
+<div style="height:28px;"></div>
+
+        <div class="settings-card">
+          <div class="settings-icon-row">🎁</div>
+          <div style="font-family:var(--font-display);font-size:20px;letter-spacing:2px;margin-bottom:4px;">REFER CONFIG</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:20px;font-weight:600;">Bonus amounts paid out on referral activity</div>
+          <div class="form-grid" style="margin-bottom:20px;">
+            <div class="form-group">
+              <label class="form-label">REFEREE INSTANT BONUS (৳)</label>
+              <input class="form-input" type="number" id="referRefereeBonus" placeholder="e.g. 5" min="0"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">REFERRER INSTANT BONUS (৳)</label>
+              <input class="form-input" type="number" id="referReferrerBonus" placeholder="e.g. 5" min="0"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">REFERRER FUTURE % (per deposit)</label>
+              <input class="form-input" type="number" id="referFuturePct" placeholder="e.g. 5" min="0" max="100"/>
+            </div>
+          </div>
+          <button class="btn btn-red" id="saveReferConfigBtn" onclick="saveReferConfig()" style="width:100%;justify-content:center;padding:13px;">SAVE REFER CONFIG</button>
+        </div>
+
+        <div style="height:28px;"></div>
+
+        <div class="settings-card">
+          <div class="settings-icon-row">📋</div>
+          <div style="font-family:var(--font-display);font-size:20px;letter-spacing:2px;margin-bottom:4px;">TRANSACTION HISTORY</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:20px;font-weight:600;">Look up full transaction log for any user by UID</div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <input class="form-input" type="text" id="txLookupUID" placeholder="Firebase UID…" style="flex:1;"/>
+            <button class="btn btn-blue" onclick="loadUserTx()">LOOK UP</button>
+          </div>
+<div id="txLookupResult"></div>
+        </div>
+
+        <div style="height:28px;"></div>
+
+        <div class="settings-card" style="max-width:600px;">
+          <div class="settings-icon-row">🏆</div>
+          <div style="font-family:var(--font-display);font-size:20px;letter-spacing:2px;margin-bottom:4px;">REFER LEADERBOARD</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:16px;font-weight:600;">Top 10 referrers by invite count</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadReferLeaderboard()" style="margin-bottom:16px;">↻ Refresh</button>
+          <div id="referLeaderboardList"></div>
+        </div>
+
+      </div><!-- /screen-settings -->
+      </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+
+<!-- BALANCE MODAL -->
+<div class="modal-overlay" id="balanceModal">
+  <div class="modal-box">
+    <div class="modal-title">ADJUST BALANCE</div>
+    <div class="modal-sub" id="balanceModalUser">User</div>
+    <div class="balance-type-tabs">
+      <button class="balance-tab add active" onclick="setBalanceType('add',this)">➕ Add</button>
+      <button class="balance-tab deduct" onclick="setBalanceType('deduct',this)">➖ Deduct</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">AMOUNT (৳)</label>
+      <input class="form-input" type="number" id="balanceAmount" placeholder="Enter amount" min="1"/>
+    </div>
+    <div class="form-group" style="margin-top:12px;">
+      <label class="form-label">NOTE (optional)</label>
+      <input class="form-input" type="text" id="balanceNote" placeholder="Reason…"/>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('balanceModal')">CANCEL</button>
+      <button class="btn btn-green" onclick="confirmBalanceAdjust()">CONFIRM</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE USER MODAL -->
+<div class="modal-overlay" id="deleteUserModal">
+  <div class="modal-box">
+    <div class="modal-title">DELETE USER</div>
+    <div class="confirm-msg">Are you sure you want to permanently delete <strong id="deleteUserName"></strong>?</div>
+    <div class="confirm-warn">⚠️ This action cannot be undone.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('deleteUserModal')">CANCEL</button>
+      <button class="btn btn-danger" onclick="confirmDeleteUser()">DELETE</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANCEL MATCH MODAL -->
+<div class="modal-overlay" id="cancelMatchModal">
+  <div class="modal-box">
+    <div class="modal-title">CANCEL MATCH</div>
+    <div class="confirm-msg">Cancel match <strong id="cancelMatchId"></strong>?</div>
+    <div class="confirm-warn">⚠️ All joined players will be refunded their entry fee.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('cancelMatchModal')">BACK</button>
+      <button class="btn btn-danger" onclick="confirmCancelMatch()">CANCEL MATCH</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAY WINNER MODAL -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal-box">
+    <div class="modal-title">PAY WINNER</div>
+    <div class="modal-sub" id="payModalSub">Confirm reward payment</div>
+    <div class="confirm-warn" id="payModalWarn"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('payModal')">CANCEL</button>
+      <button class="btn btn-green" onclick="confirmPay()">✅ CONFIRM PAY</button>
+    </div>
+  </div>
+</div>
+
+<!-- START MATCH MODAL -->
+<div class="modal-overlay" id="startMatchModal">
+  <div class="modal-box">
+    <div class="modal-title">START MATCH</div>
+    <div class="modal-sub" id="startMatchSub">This will set the match to Live and notify players.</div>
+    <div class="confirm-warn" id="startMatchWarn" style="display:none;"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('startMatchModal')">CANCEL</button>
+      <button class="btn btn-yellow" onclick="confirmStartMatch()">▶ START MATCH</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD METHOD MODAL -->
+<div class="modal-overlay" id="addMethodModal">
+  <div class="modal-box">
+    <div class="modal-title" id="methodModalTitle">ADD METHOD</div>
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div class="form-group">
+        <label class="form-label">NAME</label>
+        <input class="form-input" type="text" id="methodName" placeholder="e.g. bKash"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">LABEL</label>
+        <input class="form-input" type="text" id="methodLabel" placeholder="e.g. Mobile Banking"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">MIN AMOUNT (৳)</label>
+        <input class="form-input" type="number" id="methodMin" placeholder="100" min="1"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">MAX AMOUNT (৳)</label>
+        <input class="form-input" type="number" id="methodMax" placeholder="5000" min="1"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">FLAT FEE (৳)</label>
+        <input class="form-input" type="number" id="methodFee" placeholder="0" min="0" value="0"/>
+      </div>
+<div class="form-group">
+        <label class="form-label">ACTIVE</label>
+        <select class="form-input" id="methodActive">
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">WALLET ICON URL</label>
+        <input class="form-input" type="url" id="methodImageUrl" placeholder="https://…/icon.png"/>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('addMethodModal')">CANCEL</button>
+      <button class="btn btn-red" onclick="confirmSaveMethod()">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- WD CONFIRM MODAL -->
+<div class="modal-overlay" id="wdActionModal">
+  <div class="modal-box">
+    <div class="modal-title" id="wdActionTitle">CONFIRM</div>
+    <div class="confirm-msg" id="wdActionMsg"></div>
+    <div class="confirm-warn" id="wdActionWarn" style="display:none;"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('wdActionModal')">CANCEL</button>
+      <button class="btn" id="wdActionConfirmBtn" onclick="confirmWdAction()">CONFIRM</button>
+    </div>
+  </div>
+</div>
+<!-- ── VOICE ALERT MODAL ── -->
+<div class="modal-overlay" id="voiceModal">
+  <div class="modal-box" style="max-width:500px;">
+    <div class="modal-title" id="voiceModalTitle">VOICE ALERT</div>
+    <div class="modal-sub" id="voiceModalSub"></div>
+    <div class="confirm-warn" id="voiceBroadcastWarn" style="display:none;">
+      ⚠️ এই ভয়েস অ্যালার্ট সকল ব্যবহারকারীকে পাঠানো হবে। সতর্কতার সাথে ব্যবহার করুন।
+    </div>
+
+    <!-- SOURCE TABS -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;margin-top:4px;">
+      <button class="toggle-btn active" id="voiceTabRecord" onclick="switchVoiceTab('record')">🎙️ Record Live</button>
+      <button class="toggle-btn" id="voiceTabUpload" onclick="switchVoiceTab('upload')">📁 Upload File</button>
+    </div>
+
+    <!-- RECORD PANEL -->
+    <div id="voiceRecordPanel">
+      <div style="text-align:center;padding:20px;background:var(--bg3);border-radius:var(--radius-sm);border:1.5px solid var(--border);margin-bottom:12px;">
+        <div id="voiceRecordStatus" style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px;">মাইক্রোফোন রেডি নেই</div>
+        <div id="voiceRecordTimer" style="font-family:var(--font-display);font-size:36px;letter-spacing:4px;color:var(--red);display:none;">0:00</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
+          <button class="btn btn-red" id="voiceRecordBtn" onclick="startRecording()">🎙️ Start Recording</button>
+          <button class="btn btn-ghost" id="voiceStopBtn" onclick="stopRecording()" style="display:none;">⏹ Stop</button>
+        </div>
+      </div>
+      <div id="voiceRecordPreview" style="display:none;">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:0.5px;margin-bottom:6px;">PREVIEW</div>
+        <audio id="voiceRecordAudio" controls style="width:100%;border-radius:var(--radius-sm);"></audio>
+        <div style="margin-top:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="resetRecording()">↺ Re-record</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPLOAD PANEL -->
+    <div id="voiceUploadPanel" style="display:none;">
+      <div
+        id="voiceDropZone"
+        style="border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:32px;text-align:center;cursor:pointer;transition:border-color 0.2s;background:var(--bg3);"
+        onclick="document.getElementById('voiceFileInput').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--yellow)'"
+        ondragleave="this.style.borderColor='var(--border2)'"
+        ondrop="handleVoiceFileDrop(event)"
+      >
+        <div style="font-size:32px;margin-bottom:8px;">🎵</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text2);">Click or drag an audio file here</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;">MP3, WAV, OGG supported</div>
+      </div>
+      <input type="file" id="voiceFileInput" accept="audio/*" style="display:none;" onchange="handleVoiceFileSelect(this)"/>
+      <div id="voiceUploadPreview" style="display:none;margin-top:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:0.5px;margin-bottom:6px;">PREVIEW</div>
+        <audio id="voiceUploadAudio" controls style="width:100%;border-radius:var(--radius-sm);"></audio>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+          <span id="voiceFileName" style="font-size:12px;color:var(--text2);font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+          <button class="btn btn-ghost btn-sm" onclick="resetUpload()">✕ Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeVoiceModal()">CANCEL</button>
+      <button class="btn btn-red" id="voiceSendBtn" onclick="confirmSendVoice()" disabled>🔊 Send Voice Alert</button>
+    </div>
+  </div>
+</div>
+<!-- ── NEW: NOTIFY MODAL (single user + broadcast) ── -->
+<div class="modal-overlay" id="notifyModal">
+  <div class="modal-box">
+    <div class="modal-title" id="notifyModalTitle">SEND NOTIFICATION</div>
+    <div class="modal-sub" id="notifyModalSub"></div>
+    <div class="confirm-warn" id="notifyBroadcastWarn" style="display:none;">
+      ⚠️ This will send a notification to ALL users. Use with care.
+    </div>
+<div class="form-group" style="margin-bottom:12px;margin-top:4px;">
+      <label class="form-label">TITLE <span style="color:var(--text3);font-weight:600;">(leave blank for auto Bangla title)</span></label>
+      <input class="form-input" type="text" id="notifyTitle" placeholder="e.g. রুম কোড আপডেট হয়েছে"/>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label class="form-label">MESSAGE</label>
+      <textarea class="form-textarea" id="notifyMessage" placeholder="Type your notification message…"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">TYPE</label>
+      <select class="form-input" id="notifyType">
+        <option value="system">System</option>
+        <option value="match">Match</option>
+        <option value="wallet">Wallet</option>
+        <option value="balance_credit">Balance Credit</option>
+        <option value="balance_deduct">Balance Deduct</option>
+        <option value="match_started">Match Started</option>
+        <option value="match_won">Match Won</option>
+        <option value="match_lost">Match Lost</option>
+        <option value="room_code_added">Room Code Added</option>
+        <option value="room_code_updated">Room Code Updated</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('notifyModal')">CANCEL</button>
+      <button class="btn btn-purple" onclick="confirmSendNotify()">🔔 SEND</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.spinner {
+  width: 36px; height: 36px; border: 3px solid var(--bg3);
+  border-top-color: var(--red); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 40px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<script>
+// ════════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════════
+const WORKER_URL   = "https://ludu600bdtclient1.moeenu001-f36.workers.dev";
+const ADMIN_SECRET = "12345";
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+let allAdminMatches  = [];
+let allUsers         = [];       // currently displayed users (search result or page slice)
+let allWithdrawals   = [];
+let adminMatchFilter = "all";
+let wdFilter         = "pending";
+
+// users pagination
+let usersCurrentPage  = 1;
+let usersHasMore      = false;
+const USERS_PAGE_SIZE = 20;
+
+// search debounce
+let searchDebounceTimer = null;
+
+// Modal targets
+let balanceTargetUser   = null;
+let balanceType         = "add";
+let deleteTargetUser    = null;
+let cancelTargetMatchId = null;
+let startTargetMatchId  = null;
+let payTargetMatchId    = null;
+let payTargetWinnerUid  = null;
+let editingMethodId     = null;
+let wdActionId          = null;
+let wdActionType        = null;
+let notifyTargetUid      = null;  // null = broadcast
+let notifyTargetPlayerId = null;
+let notifyIsBroadcast    = false;
+
+// ════════════════════════════════════════════════
+//  PUSH NOTIFICATION HELPER
+// ════════════════════════════════════════════════
+const PUSH_URL = "https://voicedepartment.moeenu321.workers.dev/notify";
+
+async function sendPush(playerId, title, body) {
+  try {
+    const fd = new FormData();
+    fd.append("uid",   playerId); // "all" or player_id
+    fd.append("title", title);
+    fd.append("body",  body);
+    const res = await fetch(PUSH_URL, { method: "POST", body: fd });
+    return await res.json();
+  } catch (err) {
+    console.error("Push failed:", err);
+    return { success: false };
+  }
+}
+// ════════════════════════════════════════════════
+//  VOICE ALERT HELPER
+// ════════════════════════════════════════════════
+const VOICE_URL = "https://voicedepartment.moeenu321.workers.dev/voice";
+
+async function sendVoiceAlert(playerId, audioBlob) {
+  try {
+    const fd = new FormData();
+    fd.append("uid",   playerId); // "all" or player_id
+    fd.append("title", "Admin Voice Alert");
+    fd.append("body",  "আপনার জন্য একটি ভয়েস বার্তা এসেছে");
+    fd.append("file",  audioBlob, "voice_alert.mp3");
+    const res = await fetch(VOICE_URL, { method: "POST", body: fd });
+    return await res.json();
+  } catch (err) {
+    console.error("Voice alert failed:", err);
+    return { success: false };
+  }
+}
+
+// ── AUTO TITLE MAP (Bangla) ──
+const PUSH_TITLES = {
+  balance_credit:   "💰 ব্যালেন্স যোগ হয়েছে",
+  balance_deduct:   "💸 ব্যালেন্স কাটা হয়েছে",
+  match_started:    "🎮 ম্যাচ শুরু হয়েছে",
+  match_finished:   "🏁 ম্যাচ শেষ হয়েছে",
+  match_won:        "🏆 অভিনন্দন! আপনি জিতেছেন",
+  match_lost:       "😔 ম্যাচ হেরে গেছেন",
+  room_code_added:  "🔑 রুম কোড যোগ হয়েছে",
+  room_code_updated:"🔑 রুম কোড আপডেট হয়েছে",
+  broadcast:        "📢 LudoArena বিজ্ঞপ্তি",
+  system:           "⚙️ সিস্টেম বার্তা",
+  wallet:           "💳 ওয়ালেট আপডেট",
+  match:            "🎲 ম্যাচ আপডেট",
+};
+
+function getPushTitle(type) {
+  return PUSH_TITLES[type] || PUSH_TITLES["system"];
+}
+// ════════════════════════════════════════════════
+//  SUPABASE HELPER — get player_id by Firebase UID
+// ════════════════════════════════════════════════
+const SUPABASE_URL    = "https://hjzwndttkhhicvlookhb.supabase.co";
+const SUPABASE_ANON   = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqenduZHR0a2hoaWN2bG9va2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3NDY1NzgsImV4cCI6MjA4NDMyMjU3OH0.5SUDbHahV1NEKe9NAWe4Al4lGBjEwXJzixQY9SEWfew";
+
+async function getPlayerIdByUid(firebaseUid) {
+  if (!firebaseUid) return null;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/fcm_tokens?firebase_uid=eq.${encodeURIComponent(firebaseUid)}&select=custom_uid&limit=1`,
+      { headers: { "apikey": SUPABASE_ANON, "Authorization": `Bearer ${SUPABASE_ANON}` } }
+    );
+    const rows = await res.json();
+    return rows?.[0]?.custom_uid || null;
+  } catch (err) {
+    console.error("Supabase lookup failed:", err);
+    return null;
+  }
+}
+
+// Fetch both player IDs for a match in parallel
+async function getMatchPlayerIds(match) {
+  const [p1id, p2id] = await Promise.all([
+    getPlayerIdByUid(match.player1_uid),
+    getPlayerIdByUid(match.player2_uid),
+  ]);
+  return { p1id, p2id };
+}
+// ════════════════════════════════════════════════
+//  WORKER API HELPER
+// ════════════════════════════════════════════════
+async function api(method, path, body = null) {
+  const opts = {
+    method,
+    headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_SECRET },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${WORKER_URL}${path}`, opts);
+  return res.json();
+}
+
+// ════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════
+const screenTitles = {
+  dashboard: "DASHBOARD", create: "CREATE MATCH",
+  matches: "MANAGE MATCHES", users: "USER MANAGEMENT",
+  withdrawals: "WITHDRAWAL QUEUE", methods: "WITHDRAW METHODS",
+  settings: "SETTINGS"
+};
+
+function navigate(screen, btn) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+  document.getElementById(`screen-${screen}`).classList.add("active");
+  if (btn) btn.classList.add("active");
+  document.getElementById("headerTitle").textContent = screenTitles[screen] || screen.toUpperCase();
+}
+window.navigate = navigate;
+
+// ════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════
+async function loadDashboard() {
+  const [matchRes, userRes, wdRes] = await Promise.all([
+    api("GET", "/admin/match/list"),
+    api("GET", "/admin/user/list"),
+    api("GET", "/admin/withdraw/queue?status=pending"),
+  ]);
+
+  const matches   = matchRes.matches || [];
+  const users     = userRes.users || [];
+  const pendingWd = wdRes.withdrawals || [];
+
+  allAdminMatches = matches;
+
+  const activeCount = matches.filter(m => m.status === "started").length;
+  const proofCount  = matches.filter(m =>
+    m.status === "started" && (m.player1_proof_url || m.player2_proof_url)
+  ).length;
+
+  document.getElementById("dashTotal").textContent  = matches.length;
+  document.getElementById("dashActive").textContent = activeCount;
+  document.getElementById("dashUsers").textContent  = users.length;
+  document.getElementById("dashProofs").textContent = proofCount;
+
+  const badge   = document.getElementById("pendingBadge");
+  const wdBadge = document.getElementById("wdBadge");
+  badge.style.display   = proofCount > 0 ? "inline-block" : "none";
+  badge.textContent     = proofCount;
+  wdBadge.style.display = pendingWd.length > 0 ? "inline-block" : "none";
+  wdBadge.textContent   = pendingWd.length;
+
+  const recent = matches.slice(0, 4);
+  const grid   = document.getElementById("dashRecentMatches");
+  if (!recent.length) { grid.innerHTML = emptyHTML("🎲", "NO MATCHES YET"); return; }
+  grid.innerHTML = `<div class="matches-grid">${recent.map(m => buildMatchCard(m)).join("")}</div>`;
+}
+
+// ════════════════════════════════════════════════
+//  MATCHES
+// ════════════════════════════════════════════════
+async function loadAdminMatches() {
+  document.getElementById("adminMatchesGrid").innerHTML = '<div class="spinner"></div>';
+  const res = await api("GET", "/admin/match/list");
+  allAdminMatches = res.matches || [];
+  renderAdminMatches();
+}
+window.loadAdminMatches = loadAdminMatches;
+
+window.filterAdminMatches = (filter, btn) => {
+  adminMatchFilter = filter;
+  document.querySelectorAll(".match-filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderAdminMatches();
+};
+
+function renderAdminMatches() {
+  let matches = allAdminMatches;
+  if (adminMatchFilter !== "all") matches = matches.filter(m => m.status === adminMatchFilter);
+  const grid = document.getElementById("adminMatchesGrid");
+  if (!matches.length) { grid.innerHTML = emptyHTML("🎲", "NO MATCHES", "Try a different filter"); return; }
+  grid.innerHTML = matches.map(m => buildMatchCard(m)).join("");
+}
+
+// ── MATCH CARD BUILDER ──
+function buildMatchCard(match) {
+  const mid = match.match_id;
+
+  const badgeMap      = { open: "badge-open", started: "badge-started", finished: "badge-finished", cancelled: "badge-cancelled" };
+  const badgeLabelMap = { open: "Open", started: "🔴 Live", finished: "Finished", cancelled: "Cancelled" };
+
+  const typeChip = `<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:var(--bg4);color:var(--text2);margin-left:6px;">${(match.type||"classic").toUpperCase()}</span>`;
+  const modeChip = match.start_mode === "fixed_time"
+    ? `<span style="font-size:10px;color:var(--text3);">📅 ${match.scheduled_at ? new Date(match.scheduled_at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "TBD"}</span>`
+    : `<span style="font-size:10px;color:var(--text3);">👥 Starts on full</span>`;
+
+  const p1uid = match.player1_uid;
+  const p2uid = match.player2_uid;
+
+  function playerSlot(uid, proofUrl, label) {
+    if (!uid) return `<div class="player-row" style="opacity:0.4;"><div class="player-avatar">?</div><div class="player-info"><div class="player-name">Waiting…</div></div></div>`;
+    const initial   = uid.charAt(0).toUpperCase();
+    const proofHTML = proofUrl
+      ? `<span class="proof-indicator proof-yes" data-proof="${encodeURIComponent(proofUrl)}" onclick="openLightboxFromAttr(this)">📸 View Proof</span>`
+      : `<span class="proof-indicator proof-no">No Proof</span>`;
+    return `<div class="player-row">
+      <div class="player-avatar">${initial}</div>
+      <div class="player-info">
+        <div class="player-name">${label}</div>
+        <div class="player-uid">${uid.slice(0,16)}…</div>
+      </div>
+      ${proofHTML}
+    </div>`;
+  }
+
+  const playersHTML = playerSlot(p1uid, match.player1_proof_url, "Player 1")
+    + playerSlot(p2uid, match.player2_proof_url, "Player 2");
+
+  let footerParts = [];
+
+  // ── OPEN: set join code + start match (separate actions) ──
+  if (match.status === "open") {
+    const currentCodeHint = match.join_code
+      ? `<div class="current-code-display">
+           <span class="current-code-label">CURRENT CODE</span>
+           <span class="current-code-val">${escHtml(match.join_code)}</span>
+         </div>`
+      : "";
+
+    footerParts.push(`
+      <div class="joincode-section">
+        ${currentCodeHint}
+        <div class="cred-input-row">
+          <input class="cred-input" data-mid="${mid}" placeholder="${match.join_code ? 'Update join code…' : 'Enter join code…'}"/>
+          <button class="btn btn-yellow btn-sm" data-mid="${mid}" data-action="setcode">
+            ${match.join_code ? '✎ Update' : '🔑 Set Code'}
+          </button>
+        </div>
+        <div class="cred-input-row">
+          <button class="btn btn-blue btn-sm" style="flex:1;" data-mid="${mid}" data-action="startmatch">
+            ▶ Start Match
+          </button>
+        </div>
+        <div class="start-hint">${match.join_code ? '✅ Code set — ready to start.' : '⚠️ You can start without a code and set it after.'}</div>
+      </div>`);
+  }
+
+  // ── STARTED: update join code (separate from start) ──
+  if (match.status === "started") {
+    const currentCodeHint = match.join_code
+      ? `<div class="current-code-display">
+           <span class="current-code-label">JOIN CODE</span>
+           <span class="current-code-val">${escHtml(match.join_code)}</span>
+         </div>`
+      : "";
+
+    footerParts.push(`
+      <div class="joincode-section">
+        ${currentCodeHint}
+        <div class="cred-input-row">
+          <input class="cred-input" data-mid="${mid}" placeholder="${match.join_code ? 'Update join code…' : 'Set join code…'}"/>
+          <button class="btn btn-yellow btn-sm" data-mid="${mid}" data-action="updatecode">
+            ${match.join_code ? '✎ Update' : '🔑 Set Code'}
+          </button>
+        </div>
+      </div>`);
+
+// Pay buttons — only for players who uploaded proof
+    if (p1uid && match.player1_proof_url)
+      footerParts.push(`<button class="btn btn-green btn-sm" data-mid="${mid}" data-puid="${p1uid}" data-pnum="1" data-action="pay">🏆 Pay P1</button>`);
+    if (p2uid && match.player2_proof_url)
+      footerParts.push(`<button class="btn btn-green btn-sm" data-mid="${mid}" data-puid="${p2uid}" data-pnum="2" data-action="pay">🏆 Pay P2</button>`);
+
+    // Voice buttons — for any joined player
+    if (p1uid)
+      footerParts.push(`<button class="btn btn-red btn-sm" data-mid="${mid}" data-puid="${p1uid}" data-pnum="1" data-action="matchvoice">🎙️ P1</button>`);
+    if (p2uid)
+      footerParts.push(`<button class="btn btn-red btn-sm" data-mid="${mid}" data-puid="${p2uid}" data-pnum="2" data-action="matchvoice">🎙️ P2</button>`);
+  }
+
+  // Cancel — open or started
+  if (match.status === "open" || match.status === "started")
+    footerParts.push(`<button class="btn btn-danger btn-sm" data-mid="${mid}" data-action="cancel">✕ Cancel</button>`);
+
+  const footerHTML = footerParts.length
+    ? `<div class="mac-footer" data-cardmid="${mid}">${footerParts.join("")}</div>`
+    : "";
+
+  return `
+    <div class="match-admin-card">
+      <div class="mac-header">
+        <div>
+          <div class="mac-id">#${mid}${typeChip}</div>
+          <div style="margin-top:4px;">${modeChip}</div>
+        </div>
+        <span class="status-badge ${badgeMap[match.status]}">${badgeLabelMap[match.status]}</span>
+      </div>
+      <div class="mac-body">
+        <div class="mac-row">
+          <div class="mac-item"><div class="mac-lbl">ENTRY FEE</div><div class="mac-val red">৳${match.entry_fee}</div></div>
+          <div class="mac-item" style="text-align:center;"><div class="mac-lbl">PLAYERS</div><div class="mac-val">${match.player_count}/2</div></div>
+          <div class="mac-item" style="text-align:right;"><div class="mac-lbl">REWARD</div><div class="mac-val yellow">৳${match.reward_amount}</div></div>
+        </div>
+        <div class="mac-players">${playersHTML}</div>
+      </div>
+      ${footerHTML}
+    </div>`;
+}
+
+// ── DELEGATED CLICK HANDLER for match cards ──
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const mid    = btn.dataset.mid;
+
+  if (action === "setcode") {
+    // Sets join code on an OPEN match — does NOT start it
+    const section = btn.closest(".joincode-section");
+    const input   = section ? section.querySelector(".cred-input") : null;
+    const code    = input ? input.value.trim() : "";
+    if (!code) { showToast("Enter a join code first", "error"); return; }
+    handleSetJoinCode(mid, code);
+  }
+
+  if (action === "updatecode") {
+    // Updates join code on a STARTED match — notifies players
+    const section = btn.closest(".joincode-section");
+    const input   = section ? section.querySelector(".cred-input") : null;
+    const code    = input ? input.value.trim() : "";
+    if (!code) { showToast("Enter a join code first", "error"); return; }
+    handleUpdateCode(mid, code);
+  }
+
+if (action === "startmatch")  openStartMatchModal(mid);
+  if (action === "pay")         openPayModal(mid, btn.dataset.puid, btn.dataset.pnum);
+  if (action === "cancel")      openCancelModal(mid);
+  if (action === "matchvoice")  openMatchVoiceModal(mid, btn.dataset.puid, btn.dataset.pnum);
+});
+
+// ── SET JOIN CODE (open match only — just saves the code) ──
+async function handleSetJoinCode(matchId, code) {
+  const res = await api("POST", `/admin/match/${matchId}/joincode`, { join_code: code });
+  if (!res.success) { showToast(res.error || "Failed to set code", "error"); return; }
+  showToast("Join code saved ✅", "success");
+  const match = allAdminMatches.find(m => m.match_id === matchId);
+  if (match) {
+    const { p1id, p2id } = await getMatchPlayerIds(match);
+    const title = getPushTitle("room_code_added");
+    const body  = `ম্যাচ #${matchId} এর রুম কোড দেওয়া হয়েছে। কোড: ${code} — এখনই যোগ দিন!`;
+    if (p1id) sendPush(p1id, title, body);
+    if (p2id) sendPush(p2id, title, body);
+  }
+  loadAdminMatches();
+  loadDashboard();
+}
+
+// ── UPDATE JOIN CODE (started match — saves + notifies players) ──
+async function handleUpdateCode(matchId, code) {
+  const res = await api("POST", `/admin/match/${matchId}/updatecode`, { join_code: code });
+  if (!res.success) { showToast(res.error || "Failed to update code", "error"); return; }
+  showToast("Join code updated & players notified ✅", "success");
+  const match = allAdminMatches.find(m => m.match_id === matchId);
+  if (match) {
+    const { p1id, p2id } = await getMatchPlayerIds(match);
+    const title = getPushTitle("room_code_updated");
+    const body  = `ম্যাচ #${matchId} এর রুম কোড আপডেট হয়েছে। নতুন কোড: ${code}`;
+    if (p1id) sendPush(p1id, title, body);
+    if (p2id) sendPush(p2id, title, body);
+  }
+  loadAdminMatches();
+  loadDashboard();
+}
+
+// ── START MATCH MODAL ──
+function openStartMatchModal(matchId) {
+  const match = allAdminMatches.find(m => m.match_id === matchId);
+  startTargetMatchId = matchId;
+  document.getElementById("startMatchSub").textContent = `Start match #${matchId} and notify joined players?`;
+  const warn = document.getElementById("startMatchWarn");
+  if (!match?.join_code) {
+    warn.style.display = "block";
+    warn.textContent   = "⚠️ No join code set yet. You can update it after starting.";
+  } else {
+    warn.style.display = "none";
+  }
+  openModal("startMatchModal");
+}
+window.confirmStartMatch = async () => {
+  if (!startTargetMatchId) return;
+  closeModal("startMatchModal");
+  const res = await api("POST", `/admin/match/${startTargetMatchId}/start`);
+  if (!res.success) { showToast(res.error || "Failed to start", "error"); return; }
+  showToast("Match started! 🔴", "success");
+  const match = allAdminMatches.find(m => m.match_id === startTargetMatchId);
+  if (match) {
+    const { p1id, p2id } = await getMatchPlayerIds(match);
+    const title = getPushTitle("match_started");
+    const body  = `ম্যাচ #${startTargetMatchId} শুরু হয়েছে!${match.join_code ? ` রুম কোড: ${match.join_code}` : " রুম কোড শীঘ্রই দেওয়া হবে।"}`;
+    if (p1id) sendPush(p1id, title, body);
+    if (p2id) sendPush(p2id, title, body);
+  }
+  startTargetMatchId = null;
+  loadAdminMatches();
+  loadDashboard();
+};
+// ── PAY MODAL ──
+function openPayModal(matchId, winnerUid, playerNum) {
+  payTargetMatchId   = matchId;
+  payTargetWinnerUid = winnerUid;
+  const match = allAdminMatches.find(m => m.match_id === matchId);
+  document.getElementById("payModalSub").textContent  = `Pay Player ${playerNum} for match #${matchId}`;
+  document.getElementById("payModalWarn").textContent = `⚠️ ৳${match?.reward_amount || "?"} will be credited to Player ${playerNum}'s balance and match will be marked finished.`;
+  openModal("payModal");
+}
+window.confirmPay = async () => {
+  if (!payTargetMatchId || !payTargetWinnerUid) return;
+  closeModal("payModal");
+  const res = await api("POST", `/admin/match/${payTargetMatchId}/pay`, { winner_uid: payTargetWinnerUid });
+  if (!res.success) { showToast(res.error || "Failed to pay", "error"); return; }
+  showToast("Winner paid! Match finished 🏆", "success");
+  const match = allAdminMatches.find(m => m.match_id === payTargetMatchId);
+  if (match) {
+    const { p1id, p2id } = await getMatchPlayerIds(match);
+    const winnerIsP1 = match.player1_uid === payTargetWinnerUid;
+    const winnerId   = winnerIsP1 ? p1id : p2id;
+    const loserId    = winnerIsP1 ? p2id : p1id;
+    if (winnerId) sendPush(winnerId, getPushTitle("match_won"),  `অভিনন্দন! ম্যাচ #${payTargetMatchId} এ আপনি জিতেছেন। ৳${match.reward_amount} আপনার অ্যাকাউন্টে যোগ হয়েছে।`);
+    if (loserId)  sendPush(loserId,  getPushTitle("match_lost"), `ম্যাচ #${payTargetMatchId} এ আপনি হেরে গেছেন। পরের বার আরও ভালো করবেন!`);
+  }
+  payTargetMatchId = null; payTargetWinnerUid = null;
+  loadAdminMatches(); loadDashboard();
+};
+// ── CANCEL MODAL ──
+function openCancelModal(matchId) {
+  cancelTargetMatchId = matchId;
+  document.getElementById("cancelMatchId").textContent = "#" + matchId;
+  openModal("cancelMatchModal");
+}
+window.confirmCancelMatch = async () => {
+  if (!cancelTargetMatchId) return;
+  closeModal("cancelMatchModal");
+  const res = await api("POST", `/admin/match/${cancelTargetMatchId}/cancel`);
+  if (!res.success) { showToast(res.error || "Failed to cancel", "error"); return; }
+  showToast("Match cancelled & players refunded ✅", "success");
+  const match = allAdminMatches.find(m => m.match_id === cancelTargetMatchId);
+  if (match) {
+    const { p1id, p2id } = await getMatchPlayerIds(match);
+    const title = getPushTitle("match_finished");
+    const body  = `ম্যাচ #${cancelTargetMatchId} বাতিল করা হয়েছে। এন্ট্রি ফি ৳${match.entry_fee} আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।`;
+    if (p1id) sendPush(p1id, title, body);
+    if (p2id) sendPush(p2id, title, body);
+  }
+  cancelTargetMatchId = null;
+  loadAdminMatches(); loadDashboard();
+};
+
+// ── CREATE MATCH ──
+let createStartMode = "fixed_time";
+window.setStartMode = (mode) => {
+  createStartMode = mode;
+  document.getElementById("modeFixed").classList.toggle("active", mode === "fixed_time");
+  document.getElementById("modeOnFull").classList.toggle("active", mode === "on_full");
+  document.getElementById("scheduledAtGroup").style.display = mode === "fixed_time" ? "flex" : "none";
+};
+
+window.handleCreateMatch = async () => {
+  const fee    = parseFloat(document.getElementById("createFee").value);
+  const reward = parseFloat(document.getElementById("createReward").value);
+  const type   = document.getElementById("createType").value;
+  const date   = document.getElementById("createDate").value;
+  if (!fee || !reward) { showToast("Fill entry fee and reward", "error"); return; }
+  if (createStartMode === "fixed_time" && !date) { showToast("Pick a scheduled date", "error"); return; }
+
+  const btn = document.getElementById("createMatchBtn");
+  btn.disabled = true; btn.textContent = "CREATING…";
+
+  const res = await api("POST", "/admin/match/create", {
+    entry_fee: fee, reward_amount: reward, type,
+    start_mode: createStartMode,
+    scheduled_at: createStartMode === "fixed_time" ? new Date(date).toISOString() : null,
+  });
+
+  btn.disabled = false; btn.textContent = "CREATE MATCH";
+  if (!res.success) { showToast(res.error || "Failed to create", "error"); return; }
+  showToast(`Match #${res.match.match_id} created! 🎲`, "success");
+  document.getElementById("createFee").value    = "";
+  document.getElementById("createReward").value = "";
+  document.getElementById("createDate").value   = "";
+  await loadAdminMatches();
+  loadDashboard();
+  navigate("matches", document.getElementById("nav-matches"));
+};
+
+// ════════════════════════════════════════════════
+//  USERS — search-first, paginated load-all
+// ════════════════════════════════════════════════
+
+// ── AUTO-DETECT: email contains @, player ID is numeric ──
+function detectSearchType(q) {
+  if (!q) return null;
+  if (q.includes("@")) return "email";
+  if (/^\d+$/.test(q))  return "player_id";
+  return null;
+}
+
+// ── SEARCH HINT CHIP ──
+function updateSearchHint(q) {
+  const chip = document.getElementById("searchHintChip");
+  const type = detectSearchType(q);
+  if (!type || !q) { chip.style.display = "none"; return; }
+  chip.style.display = "inline-flex";
+  if (type === "email") {
+    chip.className = "search-hint search-hint-email";
+    chip.textContent = "✉️ Searching by email…";
+  } else {
+    chip.className = "search-hint search-hint-pid";
+    chip.textContent = "🎮 Searching by Player ID…";
+  }
+}
+
+// ── DEBOUNCED SEARCH HANDLER ──
+window.handleUserSearch = (q) => {
+  q = q.trim();
+  updateSearchHint(q);
+
+  clearTimeout(searchDebounceTimer);
+
+  if (!q) {
+    // Cleared — go back to empty state
+    showUsersEmptyState();
+    return;
+  }
+
+  const type = detectSearchType(q);
+  if (!type) {
+    // Not a recognised format yet — wait for more input
+    return;
+  }
+
+  // Debounce 500ms then fire
+  searchDebounceTimer = setTimeout(() => searchUsers(q, type), 500);
+};
+
+async function searchUsers(q, type) {
+  showUsersLoading();
+  const param = type === "email" ? `email=${encodeURIComponent(q)}` : `player_id=${encodeURIComponent(q)}`;
+  const res = await api("GET", `/admin/user/search?${param}`);
+
+  if (!res.success || !res.users || !res.users.length) {
+    showUsersTableWrap();
+    document.getElementById("usersTableBody").innerHTML =
+      `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text2);">No user found</td></tr>`;
+    document.getElementById("loadMoreRow").style.display = "none";
+    return;
+  }
+
+  allUsers = res.users;
+  usersHasMore = false;
+  renderUsersTable(allUsers);
+  showUsersTableWrap();
+}
+
+// ── PAGINATED LOAD ALL ──
+window.loadUsersPage = async (page, reset) => {
+  if (reset) {
+    allUsers = [];
+    usersCurrentPage = 1;
+    document.getElementById("userSearchInput").value = "";
+    document.getElementById("searchHintChip").style.display = "none";
+    showUsersLoading();
+  }
+
+  const res = await api("GET", `/admin/user/list?page=${page}&limit=${USERS_PAGE_SIZE}`);
+  const newUsers = res.users || [];
+  usersHasMore     = res.has_more || false;
+  usersCurrentPage = page;
+
+  if (reset) {
+    allUsers = newUsers;
+  } else {
+    allUsers = [...allUsers, ...newUsers];
+  }
+
+  renderUsersTable(allUsers);
+  showUsersTableWrap();
+
+  // Show / hide "Load More"
+  const lmRow = document.getElementById("loadMoreRow");
+  const lmBtn = document.getElementById("loadMoreBtn");
+  if (usersHasMore) {
+    lmRow.style.display = "block";
+    lmBtn.textContent   = `Load More (page ${usersCurrentPage + 1})`;
+    lmBtn.disabled      = false;
+  } else {
+    lmRow.style.display = "none";
+  }
+};
+
+function showUsersEmptyState() {
+  document.getElementById("usersTableWrap").style.display  = "none";
+  document.getElementById("usersEmptyState").style.display = "block";
+}
+function showUsersTableWrap() {
+  document.getElementById("usersTableWrap").style.display  = "block";
+  document.getElementById("usersEmptyState").style.display = "none";
+}
+function showUsersLoading() {
+  document.getElementById("usersEmptyState").style.display = "none";
+  document.getElementById("usersTableWrap").style.display  = "block";
+  document.getElementById("usersTableBody").innerHTML =
+    '<tr><td colspan="6"><div class="spinner"></div></td></tr>';
+  document.getElementById("loadMoreRow").style.display = "none";
+}
+
+function renderUsersTable(users) {
+  const tbody = document.getElementById("usersTableBody");
+  if (!users.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text2);">No users found</td></tr>';
+    return;
+  }
+tbody.innerHTML = users.map(u => {
+    const uid = u._id || u.uid || "";
+    return `<tr>
+      <td style="min-width:180px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+<div style="
+            width:36px;height:36px;border-radius:50%;flex-shrink:0;
+            background:var(--bg4);overflow:hidden;
+          ">
+            <img src="https://png.pngtree.com/png-vector/20231019/ourmid/pngtree-user-profile-avatar-png-image_10211467.png"
+              style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+              onerror="this.style.display='none'"
+            />
+          </div>
+          <div style="min-width:0;">
+            <div style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;" class="u-name" data-uid="${uid}"></div>
+            <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;" class="u-email" data-uid="${uid}"></div>
+          </div>
+        </div>
+      </td>
+      <td style="min-width:90px;">
+        <span style="
+          font-family:var(--font-mono);font-size:12px;font-weight:700;
+          background:rgba(31,107,255,0.1);color:var(--blue-light);
+          padding:4px 9px;border-radius:8px;white-space:nowrap;
+        ">#${escHtml(u.player_id || "—")}</span>
+      </td>
+      <td style="min-width:90px;">
+        <div style="font-family:var(--font-display);font-size:20px;color:var(--yellow);letter-spacing:1px;">৳${u.balance ?? 0}</div>
+      </td>
+      <td style="min-width:120px;">
+        <div style="
+          display:inline-flex;align-items:center;gap:6px;
+          background:rgba(255,214,0,0.07);border:1px solid rgba(255,214,0,0.15);
+          padding:4px 10px;border-radius:8px;margin-bottom:4px;
+        ">
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--yellow);font-weight:700;">${escHtml(u.refer_code || "—")}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text2);white-space:nowrap;">👥 ${u.refer_count || 0} invites · ৳${u.refer_earn || 0}</div>
+        ${u.referred_by_uid ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">via: ${escHtml(u.referred_by_uid.slice(0,10))}…</div>` : ""}
+      </td>
+      <td style="min-width:80px;">
+        ${u.is_blocked
+          ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:4px 10px;background:rgba(255,31,61,0.12);color:#FF6B7A;border-radius:20px;border:1px solid rgba(255,31,61,0.2);">⛔ BLOCKED</span>`
+          : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:4px 10px;background:rgba(0,230,118,0.1);color:var(--green);border-radius:20px;border:1px solid rgba(0,230,118,0.2);">✅ ACTIVE</span>`
+        }
+      </td>
+      <td style="min-width:260px;">
+        <div style="display:flex;gap:5px;flex-wrap:nowrap;align-items:center;">
+          <button style="padding:5px 10px;font-size:11px;border-radius:7px;border:none;background:linear-gradient(135deg,#00b248,var(--green));color:#000;font-weight:800;cursor:pointer;white-space:nowrap;" data-uid="${uid}" data-action="bal-add">➕ Add</button>
+          <button style="padding:5px 10px;font-size:11px;border-radius:7px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-weight:800;cursor:pointer;white-space:nowrap;" data-uid="${uid}" data-action="bal-deduct">➖ Cut</button>
+          <button style="padding:5px 10px;font-size:11px;border-radius:7px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text2);font-weight:800;cursor:pointer;white-space:nowrap;" data-uid="${uid}" data-action="block">${u.is_blocked ? "✓ Unblock" : "🚫 Block"}</button>
+          <button style="padding:5px 10px;font-size:11px;border-radius:7px;border:none;background:linear-gradient(135deg,#7C3AED,#A855F7);color:#fff;font-weight:800;cursor:pointer;" data-uid="${uid}" data-action="notify">🔔</button>
+          <button style="padding:5px 10px;font-size:11px;border-radius:7px;border:none;background:linear-gradient(135deg,var(--red),#FF4560);color:#fff;font-weight:800;cursor:pointer;" data-uid="${uid}" data-action="voice">🎙️</button>
+          <button style="padding:5px 10px;font-size:11px;border-radius:7px;border:1.5px solid rgba(255,31,61,0.4);background:transparent;color:#FF6B7A;font-weight:800;cursor:pointer;" data-uid="${uid}" data-action="delete">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+  // Safely set text content (no innerHTML injection)
+  users.forEach(u => {
+    const uid = u._id || u.uid || "";
+    document.querySelectorAll(`.u-name[data-uid="${uid}"]`).forEach(el => { el.textContent = u.username || "—"; });
+    document.querySelectorAll(`.u-email[data-uid="${uid}"]`).forEach(el => { el.textContent = u.email || "—"; });
+  });
+}
+
+// Delegated listener for users table
+document.getElementById("usersTableBody").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+  const uid    = btn.dataset.uid;
+  const action = btn.dataset.action;
+  const user   = allUsers.find(u => (u._id || u.uid) === uid);
+  if (!user) return;
+  if (action === "bal-add")    openBalanceModal(uid, "add");
+  else if (action === "bal-deduct") openBalanceModal(uid, "deduct");
+  else if (action === "block") toggleBlock(uid, user.is_blocked);
+else if (action === "notify") openNotifyModal(uid, user);
+  else if (action === "voice")  openVoiceModal(user.player_id, user);
+  else if (action === "delete") openDeleteModal(uid);
+});
+
+// ── BALANCE MODAL ──
+function openBalanceModal(uid, type) {
+  balanceTargetUser = allUsers.find(u => (u._id || u.uid) === uid);
+  if (!balanceTargetUser) return;
+  balanceType = type;
+  document.getElementById("balanceModalUser").textContent = balanceTargetUser.username || balanceTargetUser.email || "User";
+  document.getElementById("balanceAmount").value = "";
+  document.getElementById("balanceNote").value   = "";
+  document.querySelectorAll(".balance-tab").forEach(t => t.classList.remove("active"));
+  document.querySelector(`.balance-tab.${type}`).classList.add("active");
+  openModal("balanceModal");
+}
+window.openBalanceModal = openBalanceModal;
+
+window.setBalanceType = (type, btn) => {
+  balanceType = type;
+  document.querySelectorAll(".balance-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+};
+
+window.confirmBalanceAdjust = async () => {
+  const amount = parseFloat(document.getElementById("balanceAmount").value);
+  const note   = document.getElementById("balanceNote").value.trim();
+  if (!amount || amount <= 0) { showToast("Enter valid amount", "error"); return; }
+  if (!balanceTargetUser) return;
+
+  const uid        = balanceTargetUser._id || balanceTargetUser.uid;
+  const playerId   = balanceTargetUser.player_id || null;
+  const endpoint   = balanceType === "add" ? "credit" : "debit";
+  const pushType   = balanceType === "add" ? "balance_credit" : "balance_deduct";
+  const pushTitle  = getPushTitle(pushType);
+  const pushBody   = balanceType === "add"
+    ? `আপনার অ্যাকাউন্টে ৳${amount} যোগ হয়েছে।${note ? " " + note : ""}`
+    : `আপনার অ্যাকাউন্ট থেকে ৳${amount} কাটা হয়েছে।${note ? " " + note : ""}`;
+
+  const calls = [
+    api("POST", `/admin/user/${uid}/${endpoint}`, { amount, note: note || `Admin ${endpoint}` }),
+  ];
+  if (playerId) calls.push(sendPush(playerId, pushTitle, pushBody));
+
+  const [res] = await Promise.all(calls);
+  if (!res.success) { showToast(res.error || "Failed", "error"); return; }
+
+  closeModal("balanceModal");
+  showToast(`Balance ${balanceType === "add" ? "added" : "deducted"} + Push sent ✅`, "success");
+  balanceTargetUser = null;
+};
+
+async function toggleBlock(uid, isBlocked) {
+  const res = await api("POST", `/admin/user/${uid}/block`);
+  if (!res.success) { showToast("Failed to update", "error"); return; }
+  showToast(isBlocked ? "User unblocked" : "User blocked", "info");
+  // Refresh whichever view is active
+  if (allUsers.length) {
+    const updated = allUsers.map(u => (u._id || u.uid) === uid ? { ...u, is_blocked: !isBlocked } : u);
+    allUsers = updated;
+    renderUsersTable(allUsers);
+  }
+}
+
+function openDeleteModal(uid) {
+  deleteTargetUser = allUsers.find(u => (u._id || u.uid) === uid);
+  if (!deleteTargetUser) return;
+  document.getElementById("deleteUserName").textContent = deleteTargetUser.username || deleteTargetUser.email || "this user";
+  openModal("deleteUserModal");
+}
+window.confirmDeleteUser = async () => {
+  if (!deleteTargetUser) return;
+  closeModal("deleteUserModal");
+  const uid = deleteTargetUser._id || deleteTargetUser.uid;
+  const res = await api("DELETE", `/admin/user/${uid}`);
+  if (!res.success) { showToast("Failed to delete", "error"); return; }
+  showToast("User deleted", "info");
+  allUsers = allUsers.filter(u => (u._id || u.uid) !== uid);
+  renderUsersTable(allUsers);
+  deleteTargetUser = null;
+};
+
+// ════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ════════════════════════════════════════════════
+
+// ── Single user notify ──
+function openNotifyModal(uid, user) {
+  notifyTargetUid      = uid;
+  notifyTargetPlayerId = user.player_id || null;
+  notifyIsBroadcast    = false;
+  document.getElementById("notifyModalTitle").textContent = "SEND NOTIFICATION";
+  document.getElementById("notifyModalSub").textContent   = `To: ${user.username || user.email || uid} · Player ID: ${user.player_id || "—"}`;
+  document.getElementById("notifyBroadcastWarn").style.display = "none";
+  document.getElementById("notifyTitle").value   = "";
+  document.getElementById("notifyMessage").value = "";
+  document.getElementById("notifyType").value    = "system";
+  openModal("notifyModal");
+}
+
+// ── Broadcast ──
+window.openBroadcastModal = () => {
+  notifyTargetUid      = null;
+  notifyTargetPlayerId = null;
+  notifyIsBroadcast    = true;
+  document.getElementById("notifyModalTitle").textContent = "BROADCAST TO ALL USERS";
+  document.getElementById("notifyModalSub").textContent   = "Message will be sent to every registered user via push notification.";
+  document.getElementById("notifyBroadcastWarn").style.display = "block";
+  document.getElementById("notifyTitle").value   = "";
+  document.getElementById("notifyMessage").value = "";
+  document.getElementById("notifyType").value    = "broadcast";
+  openModal("notifyModal");
+};
+
+window.confirmSendNotify = async () => {
+  const message   = document.getElementById("notifyMessage").value.trim();
+  const type      = document.getElementById("notifyType").value;
+  const customTitle = document.getElementById("notifyTitle").value.trim();
+  const finalTitle  = customTitle || getPushTitle(type);
+
+  if (!message) { showToast("Enter a message", "error"); return; }
+
+  closeModal("notifyModal");
+
+  if (notifyIsBroadcast) {
+    // ── BROADCAST: push only ──
+    showToast("Broadcasting… this may take a moment.", "info");
+    const pushRes = await sendPush("all", finalTitle, message);
+    if (!pushRes.success && !pushRes.notified_count) {
+      showToast(pushRes.error || "Broadcast failed", "error"); return;
+    }
+    showToast(`Push broadcast sent to ${pushRes.notified_count || "all"} users ✅`, "success");
+
+  } else {
+    // ── SINGLE USER: in-app + push both ──
+    if (!notifyTargetPlayerId) {
+      showToast("No Player ID found for this user", "error"); return;
+    }
+
+    // Fire both in parallel
+    const [inAppRes, pushRes] = await Promise.all([
+      api("POST", `/admin/user/${notifyTargetUid}/notify`, { message, type }),
+      sendPush(notifyTargetPlayerId, finalTitle, message),
+    ]);
+
+    const inAppOk = inAppRes.success;
+    const pushOk  = pushRes.success || pushRes.notified_count > 0;
+
+    if (inAppOk && pushOk) {
+      showToast("In-app + Push notification sent ✅", "success");
+    } else if (inAppOk && !pushOk) {
+      showToast("In-app sent ✅ — Push failed ⚠️", "info");
+    } else if (!inAppOk && pushOk) {
+      showToast("Push sent ✅ — In-app failed ⚠️", "info");
+    } else {
+      showToast("Both notifications failed ❌", "error");
+    }
+  }
+
+  notifyTargetUid      = null;
+  notifyTargetPlayerId = null;
+  notifyIsBroadcast    = false;
+};
+// ════════════════════════════════════════════════
+//  VOICE ALERT MODAL LOGIC
+// ════════════════════════════════════════════════
+let voiceTargetPlayerId = null;
+let voiceIsBroadcast    = false;
+let mediaRecorder       = null;
+let audioChunks         = [];
+let recordedBlob        = null;
+let uploadedBlob        = null;
+let recordTimerInterval = null;
+let recordSeconds       = 0;
+let voiceActiveTab      = "record";
+
+// ── OPEN MODALS ──
+function openVoiceModal(playerId, user) {
+  voiceTargetPlayerId = playerId;
+  voiceIsBroadcast    = false;
+  document.getElementById("voiceModalTitle").textContent = "VOICE ALERT";
+  document.getElementById("voiceModalSub").textContent   = `To: ${user.username || user.email || playerId} · Player ID: ${playerId}`;
+  document.getElementById("voiceBroadcastWarn").style.display = "none";
+  resetVoiceModal();
+  openModal("voiceModal");
+}
+window.openVoiceModal = openVoiceModal;
+
+window.openBroadcastVoiceModal = () => {
+  voiceTargetPlayerId = null;
+  voiceIsBroadcast    = true;
+  document.getElementById("voiceModalTitle").textContent = "BROADCAST VOICE ALERT";
+  document.getElementById("voiceModalSub").textContent   = "ভয়েস অ্যালার্ট সকল ব্যবহারকারীকে পাঠানো হবে।";
+  document.getElementById("voiceBroadcastWarn").style.display = "block";
+  resetVoiceModal();
+  openModal("voiceModal");
+};
+async function openMatchVoiceModal(matchId, playerUid, playerNum) {
+  // Look up player ID from Supabase
+  const playerId = await getPlayerIdByUid(playerUid);
+  if (!playerId) {
+    showToast(`Player ${playerNum} এর Player ID পাওয়া যায়নি`, "error");
+    return;
+  }
+  voiceTargetPlayerId = playerId;
+  voiceIsBroadcast    = false;
+  document.getElementById("voiceModalTitle").textContent = `VOICE ALERT — PLAYER ${playerNum}`;
+  document.getElementById("voiceModalSub").textContent   = `Match #${matchId} · Player ${playerNum} · ID: ${playerId}`;
+  document.getElementById("voiceBroadcastWarn").style.display = "none";
+  resetVoiceModal();
+  openModal("voiceModal");
+}
+window.openMatchVoiceModal = openMatchVoiceModal;
+
+window.closeVoiceModal = () => {
+  stopRecording(true);
+  resetVoiceModal();
+  closeModal("voiceModal");
+};
+
+// ── TAB SWITCHER ──
+window.switchVoiceTab = (tab) => {
+  voiceActiveTab = tab;
+  document.getElementById("voiceTabRecord").classList.toggle("active", tab === "record");
+  document.getElementById("voiceTabUpload").classList.toggle("active", tab === "upload");
+  document.getElementById("voiceRecordPanel").style.display = tab === "record" ? "block" : "none";
+  document.getElementById("voiceUploadPanel").style.display = tab === "upload" ? "block" : "none";
+  checkVoiceSendReady();
+};
+
+// ── RESET ──
+function resetVoiceModal() {
+  resetRecording();
+  resetUpload();
+  switchVoiceTab("record");
+}
+
+// ── RECORDING ──
+window.startRecording = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks  = [];
+    recordedBlob = null;
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      recordedBlob = new Blob(audioChunks, { type: "audio/mp3" });
+      const url    = URL.createObjectURL(recordedBlob);
+      document.getElementById("voiceRecordAudio").src = url;
+      document.getElementById("voiceRecordPreview").style.display = "block";
+      checkVoiceSendReady();
+      // Stop all mic tracks
+      stream.getTracks().forEach(t => t.stop());
+    };
+
+    mediaRecorder.start();
+
+    // UI
+    document.getElementById("voiceRecordBtn").style.display    = "none";
+    document.getElementById("voiceStopBtn").style.display      = "inline-flex";
+    document.getElementById("voiceRecordTimer").style.display  = "block";
+    document.getElementById("voiceRecordStatus").textContent   = "🔴 রেকর্ডিং চলছে…";
+    document.getElementById("voiceRecordPreview").style.display = "none";
+
+    // Timer
+    recordSeconds = 0;
+    recordTimerInterval = setInterval(() => {
+      recordSeconds++;
+      const m = Math.floor(recordSeconds / 60);
+      const s = String(recordSeconds % 60).padStart(2, "0");
+      document.getElementById("voiceRecordTimer").textContent = `${m}:${s}`;
+      // Auto stop at 60s
+      if (recordSeconds >= 60) stopRecording();
+    }, 1000);
+
+  } catch (err) {
+    showToast("মাইক্রোফোন অ্যাক্সেস পাওয়া যায়নি ❌", "error");
+    console.error("Mic error:", err);
+  }
+};
+
+window.stopRecording = (silent = false) => {
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+  }
+  clearInterval(recordTimerInterval);
+  recordSeconds = 0;
+  document.getElementById("voiceRecordBtn").style.display   = "inline-flex";
+  document.getElementById("voiceStopBtn").style.display     = "none";
+  document.getElementById("voiceRecordTimer").style.display = "none";
+  if (!silent) {
+    document.getElementById("voiceRecordStatus").textContent = "রেকর্ডিং সম্পন্ন ✅";
+  } else {
+    document.getElementById("voiceRecordStatus").textContent = "মাইক্রোফোন রেডি নেই";
+  }
+};
+
+window.resetRecording = () => {
+  stopRecording(true);
+  recordedBlob = null;
+  audioChunks  = [];
+  document.getElementById("voiceRecordPreview").style.display = "none";
+  document.getElementById("voiceRecordStatus").textContent    = "মাইক্রোফোন রেডি নেই";
+  const audio = document.getElementById("voiceRecordAudio");
+  audio.pause(); audio.src = "";
+  checkVoiceSendReady();
+};
+window.resetRecording = resetRecording;
+
+// ── FILE UPLOAD ──
+window.handleVoiceFileSelect = (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  loadVoiceFile(file);
+};
+
+window.handleVoiceFileDrop = (e) => {
+  e.preventDefault();
+  document.getElementById("voiceDropZone").style.borderColor = "var(--border2)";
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  if (!file.type.startsWith("audio/")) {
+    showToast("শুধুমাত্র অডিও ফাইল সাপোর্টেড", "error"); return;
+  }
+  loadVoiceFile(file);
+};
+
+function loadVoiceFile(file) {
+  uploadedBlob = file;
+  const url    = URL.createObjectURL(file);
+  document.getElementById("voiceUploadAudio").src  = url;
+  document.getElementById("voiceFileName").textContent = file.name;
+  document.getElementById("voiceUploadPreview").style.display = "block";
+  document.getElementById("voiceDropZone").style.borderColor  = "var(--green)";
+  checkVoiceSendReady();
+}
+
+window.resetUpload = () => {
+  uploadedBlob = null;
+  document.getElementById("voiceFileInput").value   = "";
+  document.getElementById("voiceUploadPreview").style.display = "none";
+  document.getElementById("voiceDropZone").style.borderColor  = "var(--border2)";
+  const audio = document.getElementById("voiceUploadAudio");
+  audio.pause(); audio.src = "";
+  checkVoiceSendReady();
+};
+
+// ── SEND READY CHECK ──
+function checkVoiceSendReady() {
+  const hasAudio = voiceActiveTab === "record" ? !!recordedBlob : !!uploadedBlob;
+  document.getElementById("voiceSendBtn").disabled = !hasAudio;
+}
+
+// ── CONFIRM SEND ──
+window.confirmSendVoice = async () => {
+  const audioBlob = voiceActiveTab === "record" ? recordedBlob : uploadedBlob;
+  if (!audioBlob) { showToast("কোনো অডিও নেই", "error"); return; }
+
+  const targetId = voiceIsBroadcast ? "all" : voiceTargetPlayerId;
+  if (!targetId) { showToast("Player ID পাওয়া যায়নি", "error"); return; }
+
+  const sendBtn = document.getElementById("voiceSendBtn");
+  sendBtn.disabled = true;
+  sendBtn.textContent = "পাঠানো হচ্ছে…";
+
+  closeModal("voiceModal");
+
+  if (voiceIsBroadcast) showToast("ভয়েস অ্যালার্ট পাঠানো হচ্ছে…", "info");
+
+  const res = await sendVoiceAlert(targetId, audioBlob);
+
+  sendBtn.disabled    = false;
+  sendBtn.textContent = "🔊 Send Voice Alert";
+
+  if (res.success || res.notified_count > 0) {
+    showToast(
+      voiceIsBroadcast
+        ? `ভয়েস অ্যালার্ট ${res.notified_count || "সকল"} জনকে পাঠানো হয়েছে ✅`
+        : "ভয়েস অ্যালার্ট পাঠানো হয়েছে ✅",
+      "success"
+    );
+  } else {
+    showToast(res.error || "ভয়েস অ্যালার্ট পাঠানো যায়নি ❌", "error");
+  }
+
+  voiceTargetPlayerId = null;
+  voiceIsBroadcast    = false;
+  resetVoiceModal();
+};
+// ════════════════════════════════════════════════
+//  WITHDRAWALS
+// ════════════════════════════════════════════════
+async function loadWithdrawals() {
+  document.getElementById("withdrawalsTableBody").innerHTML = '<tr><td colspan="7"><div class="spinner"></div></td></tr>';
+  const res = await api("GET", "/admin/withdraw/queue");
+  allWithdrawals = res.withdrawals || [];
+  renderWithdrawals();
+}
+window.loadWithdrawals = loadWithdrawals;
+
+window.filterWithdrawals = (filter, btn) => {
+  wdFilter = filter;
+  document.querySelectorAll(".wd-filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderWithdrawals();
+};
+
+function renderWithdrawals() {
+  const tbody = document.getElementById("withdrawalsTableBody");
+  let list    = allWithdrawals;
+  if (wdFilter !== "all") list = list.filter(w => w.status === wdFilter);
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text2);">No withdrawals found</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(w => {
+    const badgeClass = w.status === "paid" ? "wd-badge-paid" : w.status === "rejected" ? "wd-badge-rejected" : "wd-badge-pending";
+    const date = w.requested_at ? new Date(w.requested_at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+    const actions = w.status === "pending"
+      ? `<div class="td-actions">
+           <button class="btn btn-green btn-sm" data-wdid="${w.withdraw_id}" data-wdaction="paid">✅ Paid</button>
+           <button class="btn btn-danger btn-sm" data-wdid="${w.withdraw_id}" data-wdaction="rejected">✕ Reject</button>
+         </div>`
+      : `<span style="font-size:12px;color:var(--text3);">${w.processed_at ? new Date(w.processed_at).toLocaleDateString("en-GB") : "—"}</span>`;
+    return `<tr>
+      <td>
+        <div style="font-weight:800;" class="wd-user" data-wdid="${w.withdraw_id}"></div>
+        <div style="font-size:11px;color:var(--text2);" class="wd-pid" data-wdid="${w.withdraw_id}"></div>
+      </td>
+      <td style="font-weight:700;">${escHtml(w.method_name)}</td>
+      <td><span class="td-balance">৳${w.amount_after_fee}</span><div style="font-size:11px;color:var(--text2);">Fee: ৳${w.fee}</div></td>
+      <td><span style="font-family:var(--font-mono);font-size:12px;" class="wd-addr" data-wdid="${w.withdraw_id}"></span></td>
+      <td><span class="${badgeClass}">${w.status.toUpperCase()}</span></td>
+      <td style="font-size:12px;color:var(--text2);">${date}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join("");
+
+  list.forEach(w => {
+    document.querySelectorAll(`.wd-user[data-wdid="${w.withdraw_id}"]`).forEach(el => { el.textContent = w.username || "—"; });
+    document.querySelectorAll(`.wd-pid[data-wdid="${w.withdraw_id}"]`).forEach(el =>  { el.textContent = w.player_id || "—"; });
+    document.querySelectorAll(`.wd-addr[data-wdid="${w.withdraw_id}"]`).forEach(el => { el.textContent = w.withdraw_address || "—"; });
+  });
+}
+
+document.getElementById("withdrawalsTableBody").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-wdaction]");
+  if (!btn) return;
+  const wdId   = btn.dataset.wdid;
+  const action = btn.dataset.wdaction;
+  const wd     = allWithdrawals.find(w => w.withdraw_id === wdId);
+  if (!wd) return;
+  openWdActionModal(wdId, action, wd);
+});
+
+function openWdActionModal(wdId, action, wd) {
+  wdActionId   = wdId;
+  wdActionType = action;
+  const confirmBtn = document.getElementById("wdActionConfirmBtn");
+  if (action === "paid") {
+    document.getElementById("wdActionTitle").textContent = "MARK AS PAID";
+    document.getElementById("wdActionMsg").textContent   = `Mark withdrawal of ৳${wd.amount_after_fee} via ${wd.method_name} as paid?`;
+    document.getElementById("wdActionWarn").style.display = "none";
+    confirmBtn.className   = "btn btn-green";
+    confirmBtn.textContent = "✅ Mark Paid";
+  } else {
+    document.getElementById("wdActionTitle").textContent = "REJECT WITHDRAWAL";
+    document.getElementById("wdActionMsg").textContent   = `Reject withdrawal of ৳${wd.amount} for ${wd.username || "user"}?`;
+    const warn = document.getElementById("wdActionWarn");
+    warn.style.display = "block";
+    warn.textContent   = `⚠️ ৳${wd.amount} will be refunded to the user's balance.`;
+    confirmBtn.className   = "btn btn-danger";
+    confirmBtn.textContent = "✕ Reject & Refund";
+  }
+  openModal("wdActionModal");
+}
+
+window.confirmWdAction = async () => {
+  if (!wdActionId || !wdActionType) return;
+  closeModal("wdActionModal");
+  const endpoint = wdActionType === "paid" ? "paid" : "reject";
+  const res = await api("POST", `/admin/withdraw/${wdActionId}/${endpoint}`);
+  if (!res.success) { showToast(res.error || "Failed", "error"); return; }
+  showToast(wdActionType === "paid" ? "Marked as paid ✅" : "Withdrawal rejected & refunded", "info");
+  wdActionId = null; wdActionType = null;
+  loadWithdrawals(); loadDashboard();
+};
+
+// ════════════════════════════════════════════════
+//  WITHDRAWAL METHODS
+// ════════════════════════════════════════════════
+async function loadMethods() {
+  document.getElementById("methodsList").innerHTML = '<div class="spinner"></div>';
+  const res     = await api("GET", "/admin/withdraw/methods");
+  const methods = res.methods || [];
+  if (!methods.length) {
+    document.getElementById("methodsList").innerHTML = emptyHTML("💳", "NO METHODS", "Add your first withdrawal method");
+    return;
+  }
+document.getElementById("methodsList").innerHTML = methods.map(m => `
+    <div class="method-row-card ${m.is_active ? "" : "method-inactive"}">
+      ${m.button_image_url ? `<img src="${escHtml(m.button_image_url)}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;" />` : ""}
+      <div class="method-row-info">
+        <div class="method-row-name">${escHtml(m.name)} <span style="font-size:11px;color:var(--text2);font-weight:600;">${escHtml(m.label)}</span></div>
+        <div class="method-row-details">Min ৳${m.min_amount} · Max ৳${m.max_amount} · Fee ৳${m.fee_flat} · ${m.is_active ? "✅ Active" : "❌ Inactive"}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-mid="${m.id}" data-maction="edit">Edit</button>
+      <button class="btn btn-danger btn-sm" data-mid="${m.id}" data-maction="delete">Delete</button>
+    </div>`).join("");
+
+  document.getElementById("methodsList").onclick = (e) => {
+    const btn     = e.target.closest("[data-maction]");
+    if (!btn) return;
+    const mid     = btn.dataset.mid;
+    const maction = btn.dataset.maction;
+    const method  = methods.find(m => m.id === mid);
+    if (!method) return;
+    if (maction === "edit")   openEditMethodModal(method);
+    else if (maction === "delete") deleteMethod(mid);
+  };
+}
+window.loadMethods = loadMethods;
+
+window.openAddMethodModal = () => {
+  editingMethodId = null;
+  document.getElementById("methodModalTitle").textContent = "ADD METHOD";
+  ["methodName","methodLabel","methodMin","methodMax","methodImageUrl"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("methodFee").value    = "0";
+  document.getElementById("methodActive").value = "true";
+  openModal("addMethodModal");
+};
+
+function openEditMethodModal(m) {
+  editingMethodId = m.id;
+  document.getElementById("methodModalTitle").textContent = "EDIT METHOD";
+  document.getElementById("methodName").value   = m.name;
+  document.getElementById("methodLabel").value  = m.label;
+  document.getElementById("methodMin").value    = m.min_amount;
+  document.getElementById("methodMax").value    = m.max_amount;
+  document.getElementById("methodFee").value    = m.fee_flat;
+  document.getElementById("methodActive").value = String(m.is_active);
+  document.getElementById("methodImageUrl").value = m.button_image_url || "";
+  openModal("addMethodModal");
+}
+
+window.confirmSaveMethod = async () => {
+  const body = {
+    name:             document.getElementById("methodName").value.trim(),
+    label:            document.getElementById("methodLabel").value.trim(),
+    min_amount:       parseFloat(document.getElementById("methodMin").value),
+    max_amount:       parseFloat(document.getElementById("methodMax").value),
+    fee_flat:         parseFloat(document.getElementById("methodFee").value) || 0,
+    is_active:        document.getElementById("methodActive").value === "true",
+    button_image_url: document.getElementById("methodImageUrl").value.trim(),
+  };
+  if (!body.name || !body.label || !body.min_amount || !body.max_amount) {
+    showToast("Fill all required fields", "error"); return;
+  }
+  const res = editingMethodId
+    ? await api("PUT",  `/admin/withdraw/methods/${editingMethodId}`, body)
+    : await api("POST", "/admin/withdraw/methods", body);
+  if (!res.success) { showToast(res.error || "Failed", "error"); return; }
+  closeModal("addMethodModal");
+  showToast(editingMethodId ? "Method updated ✅" : "Method added ✅", "success");
+  editingMethodId = null;
+  loadMethods();
+};
+
+async function deleteMethod(mid) {
+  if (!confirm("Delete this withdrawal method?")) return;
+  const res = await api("DELETE", `/admin/withdraw/methods/${mid}`);
+  if (!res.success) { showToast(res.error || "Failed", "error"); return; }
+  showToast("Method deleted", "info");
+  loadMethods();
+}
+
+// ════════════════════════════════════════════════
+//  SETTINGS — Contact Info
+// ════════════════════════════════════════════════
+async function loadContactSettings() {
+  const res = await api("GET", "/admin/contact");
+  const c   = res.contact || {};
+  document.getElementById("settingsFB").value  = c.facebook_url || "";
+  document.getElementById("settingsWA").value  = c.whatsapp_url || "";
+  document.getElementById("settingsTG").value  = c.telegram_url || "";
+  document.getElementById("settingsTGC").value = c.telegram_channel_url || "";
+}
+
+async function loadReferLeaderboard() {
+  const el = document.getElementById("referLeaderboardList");
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  const res   = await api("GET", "/admin/config");
+  const board = res.config?.refer_leaderboard || [];
+  if (!board.length) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:12px 0;">No referral activity yet</div>';
+    return;
+  }
+  const medalMap = { 0: "🥇", 1: "🥈", 2: "🥉" };
+  el.innerHTML = board.map((entry, i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:8px;">
+      <div style="font-size:20px;width:28px;text-align:center;">${medalMap[i] || `#${i + 1}`}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" class="lb-name" data-lbuid="${escHtml(entry.uid)}"></div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px;">👥 ${entry.refer_count} invites · ৳${entry.refer_earn} earned</div>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--yellow);">৳${entry.refer_earn}</div>
+    </div>`).join("");
+
+  board.forEach(entry => {
+    document.querySelectorAll(`.lb-name[data-lbuid="${escHtml(entry.uid)}"]`).forEach(el => {
+      el.textContent = entry.full_name || entry.uid;
+    });
+  });
+}
+
+async function loadReferConfig() {
+  const res = await api("GET", "/admin/config");
+  const rc  = res.config?.refer_config || {};
+  document.getElementById("referRefereeBonus").value  = rc.referee_instant_bonus  ?? 5;
+  document.getElementById("referReferrerBonus").value = rc.referrer_instant_bonus ?? 5;
+  document.getElementById("referFuturePct").value     = rc.referrer_future_pct    ?? 5;
+}
+
+window.saveReferConfig = async () => {
+  const body = {
+    referee_instant_bonus:  parseFloat(document.getElementById("referRefereeBonus").value)  || 0,
+    referrer_instant_bonus: parseFloat(document.getElementById("referReferrerBonus").value) || 0,
+    referrer_future_pct:    parseFloat(document.getElementById("referFuturePct").value)     || 0,
+  };
+  const btn = document.getElementById("saveReferConfigBtn");
+  btn.disabled = true; btn.textContent = "SAVING…";
+  const res = await api("PUT", "/admin/config/refer", body);
+  btn.disabled = false; btn.textContent = "SAVE REFER CONFIG";
+  if (!res.success) { showToast(res.error || "Failed", "error"); return; }
+  showToast("Refer config saved ✅", "success");
+};
+
+window.saveContactInfo = async () => {
+  const body = {
+    facebook_url:         document.getElementById("settingsFB").value.trim(),
+    whatsapp_url:         document.getElementById("settingsWA").value.trim(),
+    telegram_url:         document.getElementById("settingsTG").value.trim(),
+    telegram_channel_url: document.getElementById("settingsTGC").value.trim(),
+  };
+  const btn = document.getElementById("saveContactBtn");
+  btn.disabled = true; btn.textContent = "SAVING…";
+  const res = await api("POST", "/admin/contact", body);
+  btn.disabled = false; btn.textContent = "SAVE CONTACT INFO";
+  if (!res.success) { showToast(res.error || "Failed", "error"); return; }
+  showToast("Contact info saved ✅", "success");
+};
+
+// ════════════════════════════════════════════════
+//  TX LOOKUP
+// ════════════════════════════════════════════════
+window.loadUserTx = async () => {
+  const uid      = document.getElementById("txLookupUID").value.trim();
+  if (!uid) { showToast("Enter a UID", "error"); return; }
+  const resultEl = document.getElementById("txLookupResult");
+  resultEl.innerHTML = '<div class="spinner"></div>';
+  const res = await api("GET", `/admin/user/${uid}/transactions`);
+  const txs = res.transactions || [];
+  if (!txs.length) {
+    resultEl.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:16px 0;">No transactions found</div>';
+    return;
+  }
+
+const creditTypes = ["admin_credit","match_reward","refund","transfer_received","refer_bonus","refer_earn"];
+const debitTypes  = ["admin_debit","match_join","withdraw","transfer_sent"];
+
+  resultEl.innerHTML = `<div class="tx-list">${txs.map(tx => {
+    const isCredit   = creditTypes.includes(tx.type);
+    const isDebit    = debitTypes.includes(tx.type);
+    const badgeClass = isCredit ? "tx-credit" : isDebit ? "tx-debit" : "tx-neutral";
+    const amtColor   = isCredit ? "color:var(--green)" : isDebit ? "color:#FF6B7A" : "";
+    const amtPrefix  = isCredit ? "+" : isDebit ? "-" : "";
+    const date = tx.created_at ? new Date(tx.created_at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+    return `<div class="tx-row">
+      <span class="tx-type-badge ${badgeClass}">${tx.type.replace(/_/g," ").toUpperCase()}</span>
+      <div class="tx-info">
+        <div class="tx-note" id="txNote_${tx.tx_id}"></div>
+        <div class="tx-time">${date}${tx.match_id ? ` · #${tx.match_id}` : ""}</div>
+      </div>
+      <div class="tx-amount" style="${amtColor}">${amtPrefix}৳${tx.amount}</div>
+    </div>`;
+  }).join("")}</div>`;
+
+  txs.forEach(tx => {
+    const el = document.getElementById(`txNote_${tx.tx_id}`);
+    if (el) el.textContent = tx.note || tx.type;
+  });
+};
+
+// ════════════════════════════════════════════════
+//  LIGHTBOX
+// ════════════════════════════════════════════════
+let lightboxZoom = 1;
+
+window.openLightboxFromAttr = (el) => {
+  const url = decodeURIComponent(el.dataset.proof || "");
+  if (!url) return;
+  document.getElementById("lightboxImg").src = url;
+  resetLightboxZoom();
+  document.getElementById("lightbox").classList.add("open");
+};
+
+window.closeLightbox = () => document.getElementById("lightbox").classList.remove("open");
+
+window.zoomLightbox = (delta) => {
+  lightboxZoom = Math.min(4, Math.max(0.5, lightboxZoom + delta));
+  applyLightboxZoom();
+};
+
+window.resetLightboxZoom = () => {
+  lightboxZoom = 1;
+  applyLightboxZoom();
+};
+
+function applyLightboxZoom() {
+  document.getElementById("lightboxImg").style.transform = `scale(${lightboxZoom})`;
+  document.getElementById("lightboxZoomLabel").textContent = Math.round(lightboxZoom * 100) + "%";
+}
+
+// click backdrop (not the image wrap drag) to close
+document.getElementById("lightbox").addEventListener("click", (e) => {
+  if (e.target.id === "lightbox") closeLightbox();
+});
+
+// drag-to-pan when zoomed in
+(function setupLightboxDrag() {
+  const wrap = document.getElementById("lightboxImgWrap");
+  let isDown = false, startX, startY, scrollLeft, scrollTop;
+
+  wrap.addEventListener("mousedown", (e) => {
+    if (lightboxZoom <= 1) return;
+    isDown = true;
+    wrap.classList.add("dragging");
+    startX = e.pageX; startY = e.pageY;
+    scrollLeft = wrap.scrollLeft; scrollTop = wrap.scrollTop;
+  });
+  wrap.addEventListener("mouseleave", () => { isDown = false; wrap.classList.remove("dragging"); });
+  wrap.addEventListener("mouseup",    () => { isDown = false; wrap.classList.remove("dragging"); });
+  wrap.addEventListener("mousemove", (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    wrap.scrollLeft = scrollLeft - (e.pageX - startX);
+    wrap.scrollTop  = scrollTop  - (e.pageY - startY);
+  });
+})();
+
+// ════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════
+window.openModal  = (id) => document.getElementById(id).classList.add("open");
+window.closeModal = (id) => document.getElementById(id).classList.remove("open");
+
+document.querySelectorAll(".modal-overlay").forEach(o => {
+  o.addEventListener("click", e => { if (e.target === o) o.classList.remove("open"); });
+});
+
+function showToast(msg, type = "success") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className   = `toast show ${type}`;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+function escHtml(str) {
+  return String(str || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function emptyHTML(icon, text, sub = "") {
+  return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-text">${text}</div>${sub ? `<div class="empty-sub">${sub}</div>` : ""}</div>`;
+}
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+(function init() {
+loadDashboard();
+  loadAdminMatches();
+  loadWithdrawals();
+  loadMethods();
+  loadContactSettings();
+  loadReferConfig();
+  loadReferLeaderboard();
+  // Users screen no longer auto-loads — search-first
+})();
+</script>
+</body>
+</html>
